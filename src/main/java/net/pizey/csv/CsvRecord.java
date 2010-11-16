@@ -54,8 +54,11 @@
 
 package net.pizey.csv;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
+
+import sun.reflect.generics.tree.FieldTypeSignature;
 
 /**
  * A record within a CSV File.
@@ -72,6 +75,8 @@ public class CsvRecord implements Iterable<CsvField> {
 
   /** The record number of the CSV file. */
   private int recordNo;
+  
+  private HashMap<String,String> namesToValues;
 
   /**
    * Constructor.
@@ -79,6 +84,7 @@ public class CsvRecord implements Iterable<CsvField> {
   public CsvRecord() {
     super();
     this.fields = new Vector<CsvField>();
+    this.namesToValues = new HashMap<String,String>();
   }
 
   /**
@@ -88,6 +94,7 @@ public class CsvRecord implements Iterable<CsvField> {
     if (field.column.isPrimaryKey)
       primaryKeyValue = field.value;
     fields.addElement(field);
+    namesToValues.put(field.column.name, field.value);
   }
 
   /**
@@ -123,6 +130,18 @@ public class CsvRecord implements Iterable<CsvField> {
   @Override
   public Iterator<CsvField> iterator() {
     return fields.iterator();
+  }
+
+  public void unify(CsvRecord record) {
+    for (CsvField field : record.fields) { 
+      if(namesToValues.containsKey(field.column.name))
+        if(!namesToValues.get(field.column.name).equals(field.value))
+          throw new RuntimeException("Value found for " + field.column.name + " but not equal:" + 
+              namesToValues.get(field.column.name) + " != " + field.value);
+        else
+          addField(field);
+    }
+    
   }
 
 }

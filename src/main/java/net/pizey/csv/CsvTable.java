@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -16,13 +17,15 @@ import java.util.Vector;
 public class CsvTable implements Iterable<CsvRecord> {
 
   protected File dataFile = null;
-  protected HashMap<String, CsvColumn> columns = new HashMap<String, CsvColumn>();
-  protected Vector<CsvColumn> columnsInUploadOrder = new Vector<CsvColumn>();
-  protected CsvColumn primaryKey = null;
-  protected Vector<CsvRecord> records = new Vector<CsvRecord>();
   protected BufferedReader reader = null;
   protected CsvFileParser parser = null;
 
+  protected HashMap<String, CsvColumn> columns = new HashMap<String, CsvColumn>();
+  protected Vector<CsvColumn> columnsInUploadOrder = new Vector<CsvColumn>();
+  protected CsvColumn primaryKey = null;
+  protected ArrayList<CsvRecord> records = new ArrayList<CsvRecord>();
+  protected HashMap<String, Integer> keyToIndex = new HashMap<String, Integer>();
+  
   /** The record number of the CSV file: lineNo -1 */
   private int recordNo;
 
@@ -48,6 +51,7 @@ public class CsvTable implements Iterable<CsvRecord> {
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
       parser = new CsvFileParser(this.reader);
+      load();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -64,7 +68,7 @@ public class CsvTable implements Iterable<CsvRecord> {
    * 
    * @throws IOException
    */
-  public void define() {
+   void define() {
     parser.hasNextRecord(); // FIXME relying upon side effect
     recordNo = 0;
 
@@ -80,11 +84,15 @@ public class CsvTable implements Iterable<CsvRecord> {
             throw new CsvPrimaryKeyColumnAlreadySetException(getName());
           else
             primaryKey = column;
-        columnsInUploadOrder.addElement(column);
-        columns.put(column.name, column);
+        addColumn(column);
       }
     }
     System.err.println("Defined " + columnsInUploadOrder.size());
+  }
+
+  public void addColumn(CsvColumn column) {
+    columnsInUploadOrder.addElement(column);
+    columns.put(column.name, column);
   }
 
   public String getName() {
@@ -101,13 +109,16 @@ public class CsvTable implements Iterable<CsvRecord> {
    * @throws CSVWriteDownException
    * @throws NoPrimaryKeyInCSVTableException
    */
-  public void load() throws CsvParseException {
+   void load() throws CsvParseException {
 
     define();
     CsvRecord record;
     while (null != (record = parseRecord())) {
+      if (record.primaryKeyValue == null)
+        throw new RuntimeException("Bug: primary key null");
       record.setRecordNo(recordNo++);
-      records.addElement(record);
+      records.add(record);
+      keyToIndex.put(record.primaryKeyValue, new Integer(records.size() -1));
     }
 
     try {
@@ -172,7 +183,7 @@ public class CsvTable implements Iterable<CsvRecord> {
 
     if (recordDetails) {
       for (int i = 0; i < records.size(); i++) {
-        CsvRecord record = (CsvRecord) records.elementAt(i);
+        CsvRecord record = (CsvRecord) records.get(i);
         output.write("   Record: CSV primary key = " + record.primaryKeyValue);
 
         if (fieldDetails) {
@@ -219,6 +230,34 @@ public class CsvTable implements Iterable<CsvRecord> {
 
   public int getLineNo() {
     return parser.getLineNo();
+  }
+
+  public CsvTable copy() { 
+    return new CsvTable(this.dataFile);
+  }
+  public CsvTable unify(CsvTable table2) {
+    CsvTable unified = copy();
+    for (CsvColumn column : table2.columnsInUploadOrder){
+      if (!unified.containsKey(column.name))
+        unified.addColumn(column);
+    }
+    for (CsvRecord record : table2.records) { 
+      System.err.println(record.primaryKeyValue);
+      CsvRecord currentRecord = unified.get(record.primaryKeyValue);
+      if (currentRecord == null)
+        throw new RuntimeException("Not found: " + record.primaryKeyValue);
+      currentRecord.unify(record);
+    }
+    return unified;
+  }
+
+  private CsvRecord get(String key) {
+    System.err.println("keyToIndex.get(key):" + key + " = " + keyToIndex.get(key));
+    return records.get(keyToIndex.get(key));
+  }
+
+  public boolean containsKey(String key) {
+    return columns.containsKey(key);
   }
 
 }
