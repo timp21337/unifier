@@ -1,7 +1,5 @@
 package net.pizey.csv;
 
-import java.io.IOException;
-
 public class CsvException extends RuntimeException {
   private static final long serialVersionUID = -7658916534881121257L;
 
@@ -11,10 +9,6 @@ public class CsvException extends RuntimeException {
 
   public CsvException(String message) {
     super(message);
-  }
-
-  public CsvException(IOException e) {
-    super(e);
   }
 
 }

@@ -20,8 +20,6 @@ public class CsvTableTest extends TestCase {
 
     CsvTable sheet1 = new CsvTable(sheet1Name);
 
-    sheet1.load();
-
     System.out.println(sheet1.toString());
   }
 

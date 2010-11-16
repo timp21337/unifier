@@ -4,12 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 /**
  * A representation of a CSV file.
@@ -21,10 +19,12 @@ public class CsvTable implements Iterable<CsvRecord> {
   protected CsvFileParser parser = null;
 
   protected HashMap<String, CsvColumn> columns = new HashMap<String, CsvColumn>();
-  protected Vector<CsvColumn> columnsInUploadOrder = new Vector<CsvColumn>();
+  protected ArrayList<CsvColumn> columnsInUploadOrder = new ArrayList<CsvColumn>();
   protected CsvColumn primaryKey = null;
   protected ArrayList<CsvRecord> records = new ArrayList<CsvRecord>();
   protected HashMap<String, Integer> keyToIndex = new HashMap<String, Integer>();
+  
+  protected UnificationOptions unificationOption;
   
   /** The record number of the CSV file: lineNo -1 */
   private int recordNo;
@@ -32,33 +32,26 @@ public class CsvTable implements Iterable<CsvRecord> {
   /** Name of the file */
   private String name;
 
-  /**
-   * Constructor.
-   */
   public CsvTable(String fileName) {
     this(new File(fileName));
   }
-
-  /**
-   * Constructor.
-   * 
-   * @param dataFile
-   *          CSV file to read from
-   */
-  public CsvTable(File dataFile) {
-    this.dataFile = dataFile;
-    this.name = removeExtension(dataFile.getName());
+  public CsvTable(String fileName, UnificationOptions unificationOption) {
+    this(new File(fileName), unificationOption);
+  }
+  public CsvTable(File file) {
+    this(file, UnificationOptions.THROW);
+  }
+  public CsvTable(File file, UnificationOptions unificationOption) {
+    this.unificationOption = unificationOption;
+    this.dataFile = file;
+    this.name = removeExtension(file.getName());
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
       parser = new CsvFileParser(this.reader);
       load();
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new CsvException("Unexpected exception", e);
     }
-  }
-
-  public static String removeExtension(String name) {
-    return name.substring(0, name.lastIndexOf('.'));
   }
 
   /**
@@ -78,7 +71,6 @@ public class CsvTable implements Iterable<CsvRecord> {
       if (!colName.equals("")) {
         CsvColumn column = new CsvColumn(colName,
             columnsInUploadOrder.size() == 0);
-        System.err.println("Adding column definition :" + column.name);
         if (column.isPrimaryKey)
           if (primaryKey != null)
             throw new CsvPrimaryKeyColumnAlreadySetException(getName());
@@ -87,11 +79,10 @@ public class CsvTable implements Iterable<CsvRecord> {
         addColumn(column);
       }
     }
-    System.err.println("Defined " + columnsInUploadOrder.size());
   }
 
   public void addColumn(CsvColumn column) {
-    columnsInUploadOrder.addElement(column);
+    columnsInUploadOrder.add(column);
     columns.put(column.name, column);
   }
 
@@ -114,18 +105,21 @@ public class CsvTable implements Iterable<CsvRecord> {
     define();
     CsvRecord record;
     while (null != (record = parseRecord())) {
-      if (record.primaryKeyValue == null)
-        throw new RuntimeException("Bug: primary key null");
-      record.setRecordNo(recordNo++);
-      records.add(record);
-      keyToIndex.put(record.primaryKeyValue, new Integer(records.size() -1));
+      add(record);
     }
 
     try {
       reader.close();
     } catch (IOException e) {
-      throw new CsvException(e);
+      throw new CsvException("Unexpected error closing file", e);
     }
+  }
+  private void add(CsvRecord record) {
+    if (record.primaryKeyField == null)
+      throw new RuntimeException("Bug: primary key null");
+    record.setRecordNo(recordNo++);
+    records.add(record);
+    keyToIndex.put(record.primaryKeyField.value, new Integer(records.size() -1));
   }
 
   /**
@@ -164,51 +158,32 @@ public class CsvTable implements Iterable<CsvRecord> {
         }
         throw new CsvParseException(message, f);
       }
-      CsvColumn col = (CsvColumn) columnsInUploadOrder.elementAt(i);
+      CsvColumn col = (CsvColumn) columnsInUploadOrder.get(i);
       record.addField(new CsvField(col, value));
     }
     record.setLineNo(parser.getLineNo());
     return record;
   }
 
-  /**
-   * Return a string reporting on the data added to this table.
-   */
-  public void report(boolean recordDetails, boolean fieldDetails, Writer output)
-      throws IOException {
-
-    output.write("*** TABLE: " + getName().toUpperCase() + " **\n\n");
-    output.write("** I have read " + records.size() + " records of "
-        + columnsInUploadOrder.size() + " fields\n");
-
-    if (recordDetails) {
-      for (int i = 0; i < records.size(); i++) {
-        CsvRecord record = (CsvRecord) records.get(i);
-        output.write("   Record: CSV primary key = " + record.primaryKeyValue);
-
-        if (fieldDetails) {
-          Iterator<CsvField> it = record.iterator();
-          while (it.hasNext()) {
-            CsvField field = it.next();
-            output.write(field.column + "=\"" + field.value);
-            if (it.hasNext())
-              output.write("\",");
-            else
-              output.write("\"\n");
-          }
-        }
-      }
+  public CsvRecord defaulted(CsvRecord from) {
+    if (from.primaryKeyField == null)
+      throw new CsvException(
+          "Invalid record primeKeyField is null");
+    CsvRecord csvRecord = new CsvRecord();
+    csvRecord.addField(from.primaryKeyField);
+    
+    for (CsvColumn column : columnsInUploadOrder ) { 
+      if (!column.name.equals(from.primaryKeyField.column.name)) 
+        csvRecord.addField(new CsvField(column,""));
     }
-    output.write("** Currently " + records.size()
-        + " records in this table\n\n");
+    csvRecord.setLineNo(from.getLineNo());
+    return csvRecord;
   }
 
   public String toString() {
-    System.err.println("ToString :" + name + " " + columns.size());
     StringBuffer returnStringBuffer = new StringBuffer();
-    for (String columnName : columns.keySet()) {
-      System.err.println("ColumnName:" + columnName);
-      returnStringBuffer.append(columnName);
+    for (CsvColumn column : columnsInUploadOrder) {
+      returnStringBuffer.append(column.name);
       returnStringBuffer.append(',');
     }
     returnStringBuffer.append("\n");
@@ -233,31 +208,51 @@ public class CsvTable implements Iterable<CsvRecord> {
   }
 
   public CsvTable copy() { 
-    return new CsvTable(this.dataFile);
+    return new CsvTable(this.dataFile, this.unificationOption);
   }
-  public CsvTable unify(CsvTable table2) {
+  
+  public CsvTable unify(CsvTable candidateTable) {
     CsvTable unified = copy();
-    for (CsvColumn column : table2.columnsInUploadOrder){
+    for (CsvColumn column : candidateTable.columnsInUploadOrder){
       if (!unified.containsKey(column.name))
         unified.addColumn(column);
     }
-    for (CsvRecord record : table2.records) { 
-      System.err.println(record.primaryKeyValue);
-      CsvRecord currentRecord = unified.get(record.primaryKeyValue);
-      if (currentRecord == null)
-        throw new RuntimeException("Not found: " + record.primaryKeyValue);
-      currentRecord.unify(record);
+    for (CsvRecord candidateRecord : candidateTable.records) { 
+      CsvRecord currentRecord = unified.get(candidateRecord.primaryKeyField.value);
+      if (currentRecord == null) { 
+        if (unificationOption == UnificationOptions.THROW)
+          throw new CsvRecordNotFoundException(
+              "Record not found with key equal " + candidateRecord.primaryKeyField.value);
+        else if (unificationOption == UnificationOptions.LOG) {
+          System.err.println("Record not found in " + unified.name + 
+              " with key equal " + candidateRecord.primaryKeyField.value + 
+              " from line " + candidateRecord.getLineNo() + " in file " + candidateTable.name);
+        } else if (unificationOption == UnificationOptions.DEFAULT) {
+          currentRecord = defaulted(candidateRecord);
+          unified.add(currentRecord);
+          currentRecord.unify(candidateRecord, true);
+        } else
+          throw new CsvException("Unexpected UnificationOption:" + unificationOption);
+      } else
+        currentRecord.unify(candidateRecord, false);
     }
     return unified;
   }
 
   private CsvRecord get(String key) {
-    System.err.println("keyToIndex.get(key):" + key + " = " + keyToIndex.get(key));
-    return records.get(keyToIndex.get(key));
+    if (keyToIndex.get(key) == null)
+      return null;
+    else
+      return records.get(keyToIndex.get(key));
   }
 
   public boolean containsKey(String key) {
     return columns.containsKey(key);
   }
+
+  public static String removeExtension(String name) {
+    return name.substring(0, name.lastIndexOf('.'));
+  }
+
 
 }
