@@ -8,7 +8,32 @@
   <packaging>jar</packaging>
 
   <name>unifier</name>
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/timp21337/unifier</url>
+  <inceptionYear>2010</inceptionYear>
+
+  <scm>
+    <connection>
+      scm:git:git://github.com:timp21337/unifier.git
+    </connection>
+    <developerConnection>
+scm:cvs:ext:timp@paneris.net:/usr/cvsroot:unifier
+    </developerConnection>
+
+    <url>
+      https://github.com/timp21337/unifier
+    </url>
+  </scm>
+  <ciManagement>
+    <system>Hudson</system>
+    <url>http://hudson.paneris.net/</url>
+  </ciManagement>
+
+  <issueManagement>
+   <system>GITHub</system>
+    <url>
+https://github.com/timp21337/unifier/issues
+    </url>
+  </issueManagement>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,6 +57,52 @@
 		        <target>1.6</target>
 		    </configuration>
     	</plugin>
-    	</plugins>
+    <plugin>
+     <groupId>org.codehaus.mojo</groupId>
+     <artifactId>cobertura-maven-plugin</artifactId>
+     <!--version>2.0</version-->
+     <configuration>
+       <instrumentation>
+        <ignores>
+         <ignore>**Exception</ignore>
+        </ignores>
+        <excludes>
+          <exclude>**/*Exception.class</exclude>
+        </excludes>
+       </instrumentation>
+     </configuration>
+     <executions>
+       <execution>
+         <id>c</id>
+         <phase>clean</phase>
+         <goals>
+           <goal>clean</goal>
+         </goals>
+       </execution>
+       <execution>
+         <id>t</id>
+         <phase>test</phase>
+         <goals>
+           <goal>cobertura</goal>
+         </goals>
+       </execution>
+       <execution>
+         <id>p</id>
+         <phase>prepare-package</phase>
+         <goals>
+           <goal>dump-datafile</goal>
+         </goals>
+       </execution>
+     </executions>
+    </plugin>
+  	</plugins>
   </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
 </project>

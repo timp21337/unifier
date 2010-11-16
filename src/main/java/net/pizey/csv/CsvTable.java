@@ -2,8 +2,11 @@ package net.pizey.csv;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -49,11 +52,31 @@ public class CsvTable implements Iterable<CsvRecord> {
       reader = new BufferedReader(new FileReader(this.dataFile));
       parser = new CsvFileParser(this.reader);
       load();
+      reader.close();
     } catch (Exception e) {
       throw new CsvException("Unexpected exception", e);
     }
   }
 
+  /**
+   * Parse the CSV data file and store the data for saving later.
+   * 
+   * @throws IOException
+   *           if there is a file system problem
+   * @throws CsvParseException
+   *           if there is a malformed field in the CSV
+   * @throws CSVWriteDownException
+   * @throws NoPrimaryKeyInCSVTableException
+   */
+   void load() throws CsvParseException {
+
+    defineColumns();
+    CsvRecord record;
+    while (null != (record = parseRecord())) {
+      add(record);
+    }
+
+  }
   /**
    * Process the first line to define columns. The first line contains the field
    * names - this needs to be validated against expected values, and the order
@@ -61,7 +84,7 @@ public class CsvTable implements Iterable<CsvRecord> {
    * 
    * @throws IOException
    */
-   void define() {
+  void defineColumns() {
     parser.hasNextRecord(); // FIXME relying upon side effect
     recordNo = 0;
 
@@ -82,38 +105,14 @@ public class CsvTable implements Iterable<CsvRecord> {
   }
 
   public void addColumn(CsvColumn column) {
-    columnsInUploadOrder.add(column);
-    columns.put(column.name, column);
+     columnsInUploadOrder.add(column);
+     columns.put(column.name, column);
   }
 
   public String getName() {
-    return this.name;
+     return this.name;
   }
 
-  /**
-   * Parse the CSV data file and store the data for saving later.
-   * 
-   * @throws IOException
-   *           if there is a file system problem
-   * @throws CsvParseException
-   *           if there is a malformed field in the CSV
-   * @throws CSVWriteDownException
-   * @throws NoPrimaryKeyInCSVTableException
-   */
-   void load() throws CsvParseException {
-
-    define();
-    CsvRecord record;
-    while (null != (record = parseRecord())) {
-      add(record);
-    }
-
-    try {
-      reader.close();
-    } catch (IOException e) {
-      throw new CsvException("Unexpected error closing file", e);
-    }
-  }
   private void add(CsvRecord record) {
     if (record.primaryKeyField == null)
       throw new RuntimeException("Bug: primary key null");
@@ -139,7 +138,7 @@ public class CsvTable implements Iterable<CsvRecord> {
       return null;
 
     String value = null;
-    CsvRecord record = new CsvRecord();
+    CsvRecord record = new CsvRecord(this);
     for (int i = 0; i < columnsInUploadOrder.size(); i++) {
       try {
         value = parser.nextField();
@@ -169,7 +168,7 @@ public class CsvTable implements Iterable<CsvRecord> {
     if (from.primaryKeyField == null)
       throw new CsvException(
           "Invalid record primeKeyField is null");
-    CsvRecord csvRecord = new CsvRecord();
+    CsvRecord csvRecord = new CsvRecord(this);
     csvRecord.addField(from.primaryKeyField);
     
     for (CsvColumn column : columnsInUploadOrder ) { 
@@ -252,6 +251,15 @@ public class CsvTable implements Iterable<CsvRecord> {
 
   public static String removeExtension(String name) {
     return name.substring(0, name.lastIndexOf('.'));
+  }
+  public void outputToFile(String outputFileName) throws IOException {
+    FileOutputStream out = new FileOutputStream(outputFileName);
+    PrintStream p = new PrintStream( out );
+      
+    p.println (toString());
+
+    p.close();
+    
   }
 
 

@@ -9,6 +9,7 @@ import java.util.Vector;
  */
 public class CsvRecord implements Iterable<CsvField> {
 
+  private CsvTable parent = null;
   private Vector<CsvField> fields;
 
   /** The value of the primary key of this record, from the csv file */
@@ -25,8 +26,9 @@ public class CsvRecord implements Iterable<CsvField> {
   /**
    * Constructor.
    */
-  public CsvRecord() {
+  public CsvRecord(CsvTable parent) {
     super();
+    this.parent = parent;
     this.fields = new Vector<CsvField>();
     this.nameToField = new HashMap<String,CsvField>();
   }

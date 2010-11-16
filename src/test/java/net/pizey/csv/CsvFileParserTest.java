@@ -22,20 +22,10 @@ public class CsvFileParserTest extends TestCase {
     super(name);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see junit.framework.TestCase#setUp()
-   */
   protected void setUp() throws Exception {
     super.setUp();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see junit.framework.TestCase#tearDown()
-   */
   protected void tearDown() throws Exception {
     super.tearDown();
   }
@@ -59,7 +49,9 @@ public class CsvFileParserTest extends TestCase {
       while (toks.recordHasMoreFields()) {
         System.out.println("Field " + ++i + ":" + toks.nextField());
       }
+      assertEquals(3, i);
     }
+    assertEquals(new Integer(3), new Integer(recordCount));
 
   }
 

@@ -29,7 +29,7 @@ public class CsvColumn {
    * Constructor for a key value into another table.
    * 
    * @param name
-   *          the name of the POEM column this is to be mapped to.
+   *          the name of the column
    * @param foreignTable
    *          another CSVTable in which this value should be found.
    */
@@ -42,7 +42,7 @@ public class CsvColumn {
    * Constructor for a key value into another table.
    * 
    * @param name
-   *          the name of the POEM column this is to be mapped to.
+   *          the name of the column
    * @param isPrimaryKey
    *          flag to indicate this is the primary key column.
    */

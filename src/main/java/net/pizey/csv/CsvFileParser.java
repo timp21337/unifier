@@ -49,21 +49,14 @@ public class CsvFileParser {
    * @return whether there is another line
    */
   public boolean hasNextRecord() {
-    // Not confident about this
-    // but we need to return false if we have reached end and closed the file
     try {
-      if (!reader.ready())
-        return false;
-
       line = reader.readLine();
       // This should be false anyway if we're called from nextToken()
       emptyLastField = false;
       position = 0;
       if (line == null) {
-        reader.close();
         return false;
       }
-
       lineNo++;
       return true;
     } catch (IOException e) {
