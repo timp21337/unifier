@@ -41,4 +41,15 @@ public class CsvTableTest extends TestCase {
     
   }
 
+  public void testMakeFirst(){ 
+    String sheet1Name = "src/test/resources/sheet1.csv";
+    CsvTable sheet1 = new CsvTable(sheet1Name);
+
+    String input = "Id,field1,\n1,f1,\n2,2f1,\n";
+    assertEquals(input,sheet1.toString());
+
+    sheet1.makeFirst("field1");
+    assertEquals("field1,Id,\nf1,1,\n2f1,2,\n", sheet1.toString());
+    
+  }
 }

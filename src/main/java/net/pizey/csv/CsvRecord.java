@@ -10,7 +10,6 @@ import java.util.Vector;
 public class CsvRecord implements Iterable<CsvField> {
 
   private CsvTable parent = null;
-  private Vector<CsvField> fields;
 
   /** The value of the primary key of this record, from the csv file */
   CsvField primaryKeyField = null;
@@ -29,7 +28,6 @@ public class CsvRecord implements Iterable<CsvField> {
   public CsvRecord(CsvTable parent) {
     super();
     this.parent = parent;
-    this.fields = new Vector<CsvField>();
     this.nameToField = new HashMap<String,CsvField>();
   }
 
@@ -39,14 +37,10 @@ public class CsvRecord implements Iterable<CsvField> {
   public synchronized void addField(CsvField field) {
     if (field.column.isPrimaryKey)
       primaryKeyField = field;
-    fields.addElement(field);
     nameToField.put(field.column.name, field);
   }
 
   public synchronized void replaceField(CsvField oldField, CsvField newField) {
-    System.err.println("Replacing " + newField.column.name + "='" + 
-        nameToField.get(newField.column.name).value + "' with " + newField.value);
-    fields.set(fields.indexOf(oldField), newField);
     nameToField.put(oldField.column.name, newField);
   }
   /**
@@ -81,11 +75,15 @@ public class CsvRecord implements Iterable<CsvField> {
 
   @Override
   public Iterator<CsvField> iterator() {
+    Vector<CsvField> fields = new Vector<CsvField>();
+    for (CsvColumn column : parent.columnsInOrder){
+      fields.add(nameToField.get(column.name));
+    }
     return fields.iterator();
   }
 
   public void unify(CsvRecord record, boolean allowBlankOverwrite) {
-    for (CsvField field : record.fields) { 
+    for (CsvField field : record) { 
       if(nameToField.containsKey(field.column.name)){
         if (allowBlankOverwrite && nameToField.get(field.column.name).value.equals("")) 
           replaceField(nameToField.get(field.column.name), field);
