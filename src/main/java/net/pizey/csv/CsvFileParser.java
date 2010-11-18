@@ -30,10 +30,10 @@ public class CsvFileParser {
 
   private BufferedReader reader = null;
 
-  int lineNo = 0; // The first line will be line '1'
+  private int lineNo = 0; // The first line will be line '1'
   private String line = "";
   private boolean emptyLastField = false;
-  int position = 0;
+  private int position = 0;
 
   /**
    * Constructor.
@@ -46,26 +46,7 @@ public class CsvFileParser {
   }
 
   /**
-   * @return whether there is another line
-   */
-  public boolean hasNextRecord() {
-    try {
-      line = reader.readLine();
-      // This should be false anyway if we're called from nextToken()
-      emptyLastField = false;
-      position = 0;
-      if (line == null) {
-        return false;
-      }
-      lineNo++;
-      return true;
-    } catch (IOException e) {
-      throw new CsvParseException("Unexpected IO exception", e);
-    }
-  }
-
-  /**
-   * Return the line number.
+   * Return the current line number.
    * 
    * @return the current lineNo
    */
@@ -100,10 +81,10 @@ public class CsvFileParser {
     }
 
     if (position >= line.length())
-      throw new NoSuchElementException("Line " + lineNo + 
-          ": Position " + position + ", line length " + line.length());
+      throw new NoSuchElementException("Line " + lineNo + ": Position "
+          + position + ", line length " + line.length());
 
-    if (inUnclosedQuotes || (line.charAt(position) == '"' && (++position > 0))) {
+    if (inUnclosedQuotes || (line.charAt(position) == '"') && ++position > 0) {
 
       // we need to allow for quotes inside quoted fields, so now test for ",
       int q = line.indexOf("\",", position);
@@ -148,6 +129,25 @@ public class CsvFileParser {
         return it;
       }
     }
+  }
+
+  /**
+   * @return whether there is another line
+   */
+  public boolean hasNextRecord() {
+    try {
+      line = reader.readLine();
+    } catch (IOException e) {
+      throw new CsvParseException("Unexpected IO exception", e);
+    }
+    // This should be false anyway if we're called from nextToken()
+    emptyLastField = false;
+    position = 0;
+    if (line == null) {
+      return false;
+    }
+    lineNo++;
+    return true;
   }
 
 }

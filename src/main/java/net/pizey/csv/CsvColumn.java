@@ -3,40 +3,15 @@ package net.pizey.csv;
 /**
  * A column in a CSV file.
  * <p>
- * A CSVColumn can be a primary key for this table, ie unique and used by other
- * tables to refer to this record.
+ * A CSVColumn can be a primary key for this table.
  * <p>
- * A CSVColumn can also be a foreign key into another {@link CsvTable}.
+ * Every CsvTable must have one primary key.
  * 
  */
 public class CsvColumn {
 
-  String name = null;
-  boolean isPrimaryKey = false;
-  CsvTable foreignTable = null;
-
-  /**
-   * Simplest case constructor.
-   * 
-   * @param name
-   *          the name of the column.
-   */
-  public CsvColumn(String name) {
-    this.name = name;
-  }
-
-  /**
-   * Constructor for a key value into another table.
-   * 
-   * @param name
-   *          the name of the column
-   * @param foreignTable
-   *          another CSVTable in which this value should be found.
-   */
-  public CsvColumn(String name, CsvTable foreignTable) {
-    this.name = name;
-    this.foreignTable = foreignTable;
-  }
+  private String name = null;
+  private boolean isPrimaryKey = false;
 
   /**
    * Constructor for a key value into another table.
@@ -51,7 +26,16 @@ public class CsvColumn {
     this.isPrimaryKey = isPrimaryKey;
   }
 
-  public String toString() { 
+  public String getName() {
+    return name;
+  }
+
+  public boolean isPrimaryKey() {
+    return isPrimaryKey;
+  }
+
+  public String toString() {
     return name + (isPrimaryKey ? "(PK)" : "");
   }
+
 }

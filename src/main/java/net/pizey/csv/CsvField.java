@@ -9,13 +9,18 @@ public class CsvField {
   String value = null;
 
   /**
-   * @param column the column this field is in
-   * @param value the field value as a string
+   * @param column
+   *          the column this field is in
+   * @param value
+   *          the field value as a string
    */
   public CsvField(CsvColumn column, String value) {
     this.column = column;
     this.value = value;
   }
 
-}
+  public String toString() {
+    return "\"" + column.getName() + "\": \"" + value + "\"";
+  }
 
+}
