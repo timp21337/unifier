@@ -49,11 +49,11 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
 
   @Override
   public Iterator<CsvField> iterator() {
-    Vector<CsvField> fields = new Vector<CsvField>();
+    Vector<CsvField> fieldsReversed = new Vector<CsvField>();
     for (CsvColumn column : table.getColumnsInOrder()) {
-      fields.add(nameToField.get(column.getName()));
+      fieldsReversed.add(nameToField.get(column.getName()));
     }
-    return fields.iterator();
+    return fieldsReversed.iterator();
   }
 
   public void unify(CsvRecord record, boolean allowBlankOverwrite) {
@@ -166,6 +166,16 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
   @Override
   public Collection<CsvField> values() {
     return nameToField.values();
+  }
+
+  public String toString() {
+    String returnString = "";
+    for (CsvField f : this) {
+      if (!returnString.equals(""))
+        returnString += ",";
+      returnString += f.toString();
+    }
+    return "{" + returnString + "}";
   }
 
 }

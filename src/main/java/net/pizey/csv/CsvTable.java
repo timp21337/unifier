@@ -178,25 +178,6 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     return csvRecord;
   }
 
-  public String toString() {
-    StringBuffer returnStringBuffer = new StringBuffer();
-    for (CsvColumn column : columnsInOrder) {
-      returnStringBuffer.append(column.getName());
-      returnStringBuffer.append(',');
-    }
-    returnStringBuffer.append("\n");
-
-    for (String key : keys) {
-      CsvRecord record = keyToRecord.get(key);
-      for (CsvField field : record) {
-        returnStringBuffer.append(field.value);
-        returnStringBuffer.append(',');
-      }
-      returnStringBuffer.append("\n");
-    }
-    return returnStringBuffer.toString();
-  }
-
   public CsvTable copy() {
     return new CsvTable(this.dataFile, this.unificationOption);
   }
@@ -271,6 +252,25 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     return columns.containsKey(columnName);
   }
 
+  public String toString() {
+    StringBuffer returnStringBuffer = new StringBuffer();
+    for (CsvColumn column : columnsInOrder) {
+      returnStringBuffer.append(column.getName());
+      returnStringBuffer.append(',');
+    }
+    returnStringBuffer.append("\n");
+
+    for (String key : keys) {
+      CsvRecord record = keyToRecord.get(key);
+      for (CsvField field : record) {
+        returnStringBuffer.append(field.value);
+        returnStringBuffer.append(',');
+      }
+      returnStringBuffer.append("\n");
+    }
+    return returnStringBuffer.toString();
+  }
+
   @Override
   public void clear() {
     keyToRecord.clear();
@@ -334,7 +334,11 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
 
   @Override
   public Iterator<CsvRecord> iterator() {
-    return keyToRecord.values().iterator();
+    ArrayList<CsvRecord> records = new ArrayList<CsvRecord>();
+    for (String key : keys) {
+      records.add(keyToRecord.get(key));
+    }
+    return records.iterator();
   }
 
 }
