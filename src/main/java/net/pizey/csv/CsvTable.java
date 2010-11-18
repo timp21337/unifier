@@ -230,7 +230,7 @@ public class CsvTable implements Iterable<CsvRecord> {
               " with key equal " + candidateRecord.primaryKeyField.value + 
               " from line " + candidateRecord.getLineNo() + " in file " + candidateTable.name);
         } else if (unificationOption == UnificationOptions.DEFAULT) {
-          currentRecord = defaulted(candidateRecord);
+          currentRecord = unified.defaulted(candidateRecord);
           unified.add(currentRecord);
           currentRecord.unify(candidateRecord, true);
         } else
