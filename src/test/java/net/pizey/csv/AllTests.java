@@ -11,6 +11,7 @@ public class AllTests extends TestCase {
   public static Test suite() {
 
     TestSuite ts = new TestSuite();
+    ts.addTestSuite(CsvRecordTest.class);
     ts.addTestSuite(CsvTableTest.class);
     ts.addTestSuite(CsvFileParserTest.class);
     ts.addTestSuite(DefaultingUnifierTest.class);

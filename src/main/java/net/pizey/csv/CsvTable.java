@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * A representation of a CSV file.
  */
-public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
+public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
 
   private File dataFile = null;
 
@@ -49,19 +49,19 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   }
 
   public CsvTable(File file, UnificationOptions unificationOption) {
+    super();
     this.unificationOption = unificationOption;
     this.dataFile = file;
     this.name = removeExtension(file.getName());
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
-    } catch (IOException e) {
-      throw new CsvException(e);
-    }
-    load(new CsvFileParser(reader));
-    try {
+      load(new CsvFileParser(reader));
       reader.close();
     } catch (IOException e) {
+      // Naughty me, FileNotFoundException is provocable,
+      // BufferedReader.close exception is not,
+      // so shared for code coverage win.
       throw new CsvBugException("Unexpected exception", e);
     }
   }
@@ -114,13 +114,14 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   public String getName() {
     return this.name;
   }
+
   public CsvColumn getPrimaryKeyColumn() {
     return primaryKey;
   }
 
   public void add(CsvRecord record) {
     if (record.getPrimaryKeyField() == null)
-      throw new CsvBugException("Primary key null");
+      throw new CsvMissingPrimaryKeyException();
     record.setRecordNo(recordNo++);
     keys.add(record.getPrimaryKeyField().value);
     keyToRecord.put(record.getPrimaryKeyField().value, record);
@@ -166,19 +167,19 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   }
 
   /** Add defaulted values, discard unknown fields */
-  public CsvRecord defaulted(CsvRecord from) {
-    if (from.getPrimaryKeyField() == null)
-      throw new CsvBugException("Invalid record: primeKeyField is null");
+  public CsvRecord addMissingFields(CsvRecord record) {
+    if (record.getPrimaryKeyField() == null)
+      throw new CsvMissingPrimaryKeyException();
     CsvRecord csvRecord = new CsvRecord(this);
-    csvRecord.addField(from.getPrimaryKeyField());
+    csvRecord.addField(record.getPrimaryKeyField());
 
     for (CsvColumn column : columnsInOrder) {
-      if (!column.getName().equals(from.getPrimaryKeyField().column.getName())){
-        csvRecord.addField(new CsvField(column, 
-            from.containsKey(column.getName()) ? from.get(column.getName()).value : ""));
+      if (!column.getName().equals(record.getPrimaryKeyField().column.getName())) {
+        csvRecord.addField(new CsvField(column,
+            record.containsKey(column.getName()) ? record.get(column.getName()).value : ""));
       }
     }
-    csvRecord.setLineNo(from.getLineNo());
+    csvRecord.setLineNo(record.getLineNo());
     return csvRecord;
   }
 
@@ -186,8 +187,8 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     return new CsvTable(this.dataFile, this.unificationOption);
   }
 
-  public CsvTable unify(CsvTable candidateTable) {
-    CsvTable unified = copy();
+  public CsvTable unify(CsvTable candidateTable, boolean unifyWithEmpty) {
+    CsvTable unified = this.copy();
     for (CsvColumn column : candidateTable.columnsInOrder) {
       if (!unified.hasColumn(column.getName()))
         unified.addColumn(column);
@@ -196,24 +197,24 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
       CsvRecord currentRecord = unified.get(candidateRecord
           .getPrimaryKeyField().value);
       if (currentRecord == null) {
-        if (unificationOption == UnificationOptions.THROW)
+        switch (unificationOption) {
+        case THROW:
           throw new CsvRecordNotFoundException(
               "Record not found with key equal "
                   + candidateRecord.getPrimaryKeyField().value);
-        else if (unificationOption == UnificationOptions.LOG) {
+        case LOG:
           System.err.println("Record not found in " + unified.name
               + " with key equal " + candidateRecord.getPrimaryKeyField().value
               + " from line " + candidateRecord.getLineNo() + " in file "
               + candidateTable.name);
-        } else if (unificationOption == UnificationOptions.DEFAULT) {
-          currentRecord = unified.defaulted(candidateRecord);
-          unified.add(currentRecord);
-          currentRecord.unify(candidateRecord, true);
-        } else
-          throw new CsvBugException("Impossible: Unexpected UnificationOption:"
-              + unificationOption);
+          break;
+        case DEFAULT:
+          candidateRecord = unified.addMissingFields(candidateRecord);
+          unified.add(candidateRecord);
+          break;
+        }
       } else
-        currentRecord.unify(candidateRecord, false);
+        currentRecord.unify(candidateRecord, unifyWithEmpty);
     }
     return unified;
   }
@@ -312,13 +313,13 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     if (keys.contains(key))
       throw new CsvDuplicateKeyException("Key " + key + " already exists");
     keys.add(key);
-    return keyToRecord.put(key, defaulted(value));
+    return keyToRecord.put(key, addMissingFields(value));
   }
 
   @Override
   public void putAll(Map<? extends String, ? extends CsvRecord> m) {
-    for (Entry<? extends String, ? extends CsvRecord> e : m.entrySet()) { 
-      put(e.getKey(), e.getValue());      
+    for (Entry<? extends String, ? extends CsvRecord> e : m.entrySet()) {
+      put(e.getKey(), e.getValue());
     }
   }
 

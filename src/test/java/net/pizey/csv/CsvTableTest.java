@@ -1,6 +1,3 @@
-/**
- * 
- */
 package net.pizey.csv;
 
 import java.io.BufferedReader;
@@ -41,7 +38,6 @@ public class CsvTableTest extends TestCase {
     }
     assertEquals(input, outputBuffer.toString());
     reader.close();
-
   }
 
   public void testMakeFirst() {
@@ -63,10 +59,10 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet2 = new CsvTable(
         "src/test/resources/mutatedCopyOfSheet2.csv", UnificationOptions.LOG);
     try {
-      sheet1.unify(sheet2).toString();
+      sheet1.unify(sheet2, false).toString();
     } catch (CsvException e) {
       assertEquals(
-          "Line 3 value found for field1 but not equal: '\"field1\": \"2f1\"' != '\"field1\": \"2f1-mutated\"'",
+          "Line 3 value found for field1 but not equal to current value : '2f1' != '2f1-mutated'",
           e.getMessage());
     }
   }
@@ -80,7 +76,7 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet2 = new CsvTable(sheet2Name, UnificationOptions.THROW);
     CsvTable sheet3 = new CsvTable(sheet3Name, UnificationOptions.THROW);
     try {
-      sheet1.unify(sheet2).unify(sheet3).toString();
+      sheet1.unify(sheet2, false).unify(sheet3, false).toString();
       fail("Should have bombed");
     } catch (CsvRecordNotFoundException e) {
       e = null;
@@ -97,7 +93,7 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet3 = new CsvTable(sheet3Name, UnificationOptions.LOG);
     String expected = "Id,field1,field2,field3,field4,\n" + "1,f1,f2,f3,f4,\n"
         + "2,2f1,2f2,2f3,2f4,\n";
-    String out = sheet1.unify(sheet2).unify(sheet3).toString();
+    String out = sheet1.unify(sheet2, false).unify(sheet3, false).toString();
     assertEquals(expected, out);
 
   }
@@ -112,8 +108,32 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet3 = new CsvTable(sheet3Name, UnificationOptions.DEFAULT);
     String expected = "Id,field1,field2,field3,field4,\n" + "1,f1,f2,f3,f4,\n"
         + "2,2f1,2f2,2f3,2f4,\n" + "3,3f1,3f2,3f3,3f4,\n";
-    String out = sheet1.unify(sheet2).unify(sheet3).toString();
+    String out = sheet1.unify(sheet2, false).unify(sheet3, false).toString();
     assertEquals(expected, out);
+
+  }
+
+  public void testUnifyDEFAULTUnifyWithEmpty() {
+    CsvTable holey = new CsvTable("src/test/resources/sheet2WithBlanks.csv",
+        UnificationOptions.DEFAULT);
+    CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.DEFAULT);
+    String expected = "Id,field1,field2,\n" + "1,f1,f2,\n"
+        + "2,2f1,2f2,\n";
+    String out = holey.unify(sheet2, true).toString();
+    assertEquals(expected, out);
+
+  }
+
+  public void testUnifyDEFAULTNotUnifyWithEmpty() {
+    CsvTable holey = new CsvTable("src/test/resources/sheet2WithBlanks.csv",
+        UnificationOptions.DEFAULT);
+    CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.DEFAULT);
+    try {
+      holey.unify(sheet2, false).toString();
+      fail("Should have bombed");
+    } catch (CsvRecordUnificationException e) {
+      e = null;
+    }
 
   }
 
@@ -128,7 +148,29 @@ public class CsvTableTest extends TestCase {
     assertEquals("Id(PK)", sheet.getColumn("Id").toString());
     assertEquals("Id", sheet.getColumn("Id").getName());
     assertEquals("field1", sheet.getColumn("field1").getName());
-    assertEquals("Id",sheet.getPrimaryKeyColumn().getName());
+    assertEquals("Id", sheet.getPrimaryKeyColumn().getName());
+  }
+
+  public void testMalformedRecordCannotBeAdded() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord bad = new CsvRecord(sheet);
+    try {
+      sheet.add(bad);
+      fail("Should have bombed");
+    } catch (CsvMissingPrimaryKeyException e) {
+      e = null;
+    }
+  }
+
+  public void testMalformedRecordCannotBeDefaulted() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord bad = new CsvRecord(sheet);
+    try {
+      sheet.addMissingFields(bad);
+      fail("Should have bombed");
+    } catch (CsvMissingPrimaryKeyException e) {
+      e = null;
+    }
   }
 
   /**
@@ -190,7 +232,7 @@ public class CsvTableTest extends TestCase {
   public void testKeySet() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     Set<String> s = sheet.keySet();
-    assertEquals("[2, 1]",s.toString());
+    assertEquals("[2, 1]", s.toString());
   }
 
   /**
@@ -205,13 +247,13 @@ public class CsvTableTest extends TestCase {
     r.setRecordNo(99);
     CsvField pk = new CsvField(sheet.getPrimaryKeyColumn(), "3");
     r.addField(pk);
-    r.addField(new CsvField(sheet.getColumn("field1"),"new"));
-    sheet.put("3",r);
+    r.addField(new CsvField(sheet.getColumn("field1"), "new"));
+    sheet.put("3", r);
     assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,new,,\n", sheet.toString());
     try {
-      sheet.put("3",r);
+      sheet.put("3", r);
       fail("Should have bombed");
-    } catch (CsvDuplicateKeyException e) { 
+    } catch (CsvDuplicateKeyException e) {
       e = null;
     }
   }
@@ -223,7 +265,8 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvTable sheet2a = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.LOG);
     sheet2.putAll(sheet2a);
-    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2.toString());
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2
+        .toString());
   }
 
   /**
@@ -233,7 +276,8 @@ public class CsvTableTest extends TestCase {
     CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvTable sheet2a = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.LOG);
     sheet2.putAll(sheet2a);
-    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2.toString());
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2
+        .toString());
     sheet2.remove("4");
     assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n", sheet2.toString());
   }
@@ -265,10 +309,10 @@ public class CsvTableTest extends TestCase {
   public void testIterator() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     int i = 0;
-    for(CsvRecord record : sheet) {
+    for (CsvRecord record : sheet) {
       i++;
-      assertEquals(new Integer(i).toString(),record.getPrimaryKeyField().value);
-      assertEquals(i -1, record.getRecordNo());
+      assertEquals(new Integer(i).toString(), record.getPrimaryKeyField().value);
+      assertEquals(i - 1, record.getRecordNo());
       assertEquals(i + 1, record.getLineNo());
     }
   }

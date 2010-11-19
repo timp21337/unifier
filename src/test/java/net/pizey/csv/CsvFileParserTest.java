@@ -52,28 +52,41 @@ public class CsvFileParserTest extends TestCase {
     assertEquals(new Integer(3), new Integer(recordCount));
 
   }
+
   public void testMissingCommaAfterQuote() {
-    try { 
+    try {
       new CsvTable("src/test/resources/missingCommaAfterQuote.csv", UnificationOptions.LOG);
-    } catch (CsvParseException e) { 
+    } catch (CsvParseException e) {
       assertTrue(e.getCause() instanceof IllegalArgumentException);
-    }    
+    }
   }
 
   public void testUnclosedQuote() {
-    try { 
+    try {
       new CsvTable("src/test/resources/unclosedQuote.csv", UnificationOptions.LOG);
-    } catch (CsvParseException e) { 
+      fail("Should have bombed");
+    } catch (CsvParseException e) {
       assertTrue(e.getCause() instanceof IllegalArgumentException);
-    }    
+    }
   }
 
   public void testUnclosedQuoteAndNewline() {
-    try { 
+    try {
       new CsvTable("src/test/resources/unclosedQuoteAndNewline.csv", UnificationOptions.LOG);
-    } catch (CsvParseException e) { 
+      fail("Should have bombed");
+    } catch (CsvParseException e) {
       assertTrue(e.getCause() instanceof NoSuchElementException);
-    }    
+    }
+  }
+
+  public void testBlankLineAtEndOfFile() {
+    try {
+      new CsvTable("src/test/resources/blankLineAtEndOfFile.csv", UnificationOptions.LOG);
+      fail("Should have bombed");
+    } catch (CsvParseException e) {
+      System.err.println(e.getMessage());
+      assertTrue(e.getCause() instanceof NoSuchElementException);
+    }
   }
 
   /**

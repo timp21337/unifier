@@ -34,15 +34,6 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     this.nameToField = new HashMap<String, CsvField>();
   }
 
-  /**
-   * Add a field to this record.
-   */
-  public synchronized void addField(CsvField field) {
-    if (field.column.isPrimaryKey())
-      primaryKeyField = field;
-    nameToField.put(field.column.getName(), field);
-  }
-
   public synchronized void replaceField(CsvField oldField, CsvField newField) {
     nameToField.put(oldField.column.getName(), newField);
   }
@@ -56,22 +47,39 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     return fieldsReversed.iterator();
   }
 
-  public void unify(CsvRecord record, boolean allowBlankOverwrite) {
-    for (CsvField field : record) {
-      if (nameToField.containsKey(field.column.getName())) {
-        if (allowBlankOverwrite && nameToField.get(field.column.getName()).value.equals(""))
-          replaceField(nameToField.get(field.column.getName()), field);
-        else if (!nameToField.get(field.column.getName()).value.equals(field.value))
-          throw new CsvException("Line " + lineNo + " value found for " + field.column.getName()
-              + " but not equal: '"
-              + nameToField.get(field.column.getName())
-              + "' != '"
-              + field + "'");
-
+  /**
+   * Unify this record with another, adding new fields.
+   * 
+   * @param unifyWithEmpty
+   *          whether a filled field can unify with an empty one
+   */
+  public void unify(CsvRecord candidateRecord, boolean unifyWithEmpty) {
+    for (CsvField candidateField : candidateRecord) {
+      if (this.nameToField.containsKey(candidateField.column.getName())) {
+        CsvField currentField = nameToField.get(candidateField.column.getName());
+        if (currentField.value.equals("") && unifyWithEmpty)
+          replaceField(currentField, candidateField);
+        else if (!currentField.value.equals(candidateField.value))
+          throw new CsvRecordUnificationException(lineNo, currentField, candidateField);
       } else
-        addField(field);
+        addField(candidateField);
     }
 
+  }
+
+  /**
+   * Add a field to this record.
+   */
+  public synchronized void addField(CsvField field) {
+    if (field.column.isPrimaryKey())
+      setPrimaryKeyField(field);
+    nameToField.put(field.column.getName(), field);
+  }
+
+  private void setPrimaryKeyField(CsvField pk) {
+    if (primaryKeyField != null)
+      throw new CsvPrimaryKeyAlreadySetException(primaryKeyField, pk);
+    primaryKeyField = pk;
   }
 
   /**

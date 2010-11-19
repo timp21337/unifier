@@ -82,7 +82,7 @@ public class CsvFileParser {
 
     if (position >= line.length())
       throw new NoSuchElementException("Line " + lineNo + ": Position "
-          + position + ", line length " + line.length() + " (new line before end quote)");
+          + position + ", line length " + line.length() + " (eof before end of token)");
 
     if (inUnclosedQuotes || (line.charAt(position) == '"') && ++position > 0) {
 
