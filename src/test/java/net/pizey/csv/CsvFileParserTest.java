@@ -1,11 +1,9 @@
-/**
- * 
- */
 package net.pizey.csv;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.NoSuchElementException;
 
 import junit.framework.TestCase;
 
@@ -53,6 +51,29 @@ public class CsvFileParserTest extends TestCase {
     }
     assertEquals(new Integer(3), new Integer(recordCount));
 
+  }
+  public void testMissingCommaAfterQuote() {
+    try { 
+      new CsvTable("src/test/resources/missingCommaAfterQuote.csv", UnificationOptions.LOG);
+    } catch (CsvParseException e) { 
+      assertTrue(e.getCause() instanceof IllegalArgumentException);
+    }    
+  }
+
+  public void testUnclosedQuote() {
+    try { 
+      new CsvTable("src/test/resources/unclosedQuote.csv", UnificationOptions.LOG);
+    } catch (CsvParseException e) { 
+      assertTrue(e.getCause() instanceof IllegalArgumentException);
+    }    
+  }
+
+  public void testUnclosedQuoteAndNewline() {
+    try { 
+      new CsvTable("src/test/resources/unclosedQuoteAndNewline.csv", UnificationOptions.LOG);
+    } catch (CsvParseException e) { 
+      assertTrue(e.getCause() instanceof NoSuchElementException);
+    }    
   }
 
   /**

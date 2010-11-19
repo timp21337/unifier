@@ -24,6 +24,7 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   private HashMap<String, CsvColumn> columns = new HashMap<String, CsvColumn>();
   private ArrayList<CsvColumn> columnsInOrder = new ArrayList<CsvColumn>();
   private CsvColumn primaryKey = null;
+
   private HashMap<String, CsvRecord> keyToRecord = new HashMap<String, CsvRecord>();
   private ArrayList<String> keys = new ArrayList<String>();
 
@@ -55,13 +56,13 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
     } catch (IOException e) {
-      throw new CsvException("Unexpected exception", e);
+      throw new CsvException(e);
     }
     load(new CsvFileParser(reader));
     try {
       reader.close();
     } catch (IOException e) {
-      throw new CsvException("Unexpected exception", e);
+      throw new CsvBugException("Unexpected exception", e);
     }
   }
 
@@ -99,10 +100,7 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
       if (!colName.equals("")) {
         CsvColumn column = new CsvColumn(colName, columnsInOrder.size() == 0);
         if (column.isPrimaryKey())
-          if (primaryKey != null)
-            throw new CsvPrimaryKeyColumnAlreadySetException(getName());
-          else
-            primaryKey = column;
+          primaryKey = column;
         addColumn(column);
       }
     }
@@ -116,10 +114,13 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   public String getName() {
     return this.name;
   }
+  public CsvColumn getPrimaryKeyColumn() {
+    return primaryKey;
+  }
 
   public void add(CsvRecord record) {
     if (record.getPrimaryKeyField() == null)
-      throw new RuntimeException("Bug: primary key null");
+      throw new CsvBugException("Primary key null");
     record.setRecordNo(recordNo++);
     keys.add(record.getPrimaryKeyField().value);
     keyToRecord.put(record.getPrimaryKeyField().value, record);
@@ -164,15 +165,18 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
     return record;
   }
 
+  /** Add defaulted values, discard unknown fields */
   public CsvRecord defaulted(CsvRecord from) {
     if (from.getPrimaryKeyField() == null)
-      throw new CsvException("Invalid record primeKeyField is null");
+      throw new CsvBugException("Invalid record: primeKeyField is null");
     CsvRecord csvRecord = new CsvRecord(this);
     csvRecord.addField(from.getPrimaryKeyField());
 
     for (CsvColumn column : columnsInOrder) {
-      if (!column.getName().equals(from.getPrimaryKeyField().column.getName()))
-        csvRecord.addField(new CsvField(column, ""));
+      if (!column.getName().equals(from.getPrimaryKeyField().column.getName())){
+        csvRecord.addField(new CsvField(column, 
+            from.containsKey(column.getName()) ? from.get(column.getName()).value : ""));
+      }
     }
     csvRecord.setLineNo(from.getLineNo());
     return csvRecord;
@@ -206,7 +210,7 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
           unified.add(currentRecord);
           currentRecord.unify(candidateRecord, true);
         } else
-          throw new CsvException("Unexpected UnificationOption:"
+          throw new CsvBugException("Impossible: Unexpected UnificationOption:"
               + unificationOption);
       } else
         currentRecord.unify(candidateRecord, false);
@@ -273,6 +277,7 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
 
   @Override
   public void clear() {
+    keys = new ArrayList<String>();
     keyToRecord.clear();
   }
 
@@ -302,18 +307,24 @@ public class CsvTable implements Iterable<CsvRecord>, Map<String, CsvRecord> {
   }
 
   @Override
+  /** Put, defaulting missing fields, dropping unknown fields. */
   public CsvRecord put(String key, CsvRecord value) {
-    return keyToRecord.put(key, value);
+    if (keys.contains(key))
+      throw new CsvDuplicateKeyException("Key " + key + " already exists");
+    keys.add(key);
+    return keyToRecord.put(key, defaulted(value));
   }
 
   @Override
   public void putAll(Map<? extends String, ? extends CsvRecord> m) {
-    keyToRecord.putAll(m);
-
+    for (Entry<? extends String, ? extends CsvRecord> e : m.entrySet()) { 
+      put(e.getKey(), e.getValue());      
+    }
   }
 
   @Override
   public CsvRecord remove(Object key) {
+    keys.remove(key);
     return keyToRecord.remove(key);
   }
 

@@ -5,6 +5,7 @@ package net.pizey.csv;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import junit.framework.TestCase;
@@ -127,6 +128,7 @@ public class CsvTableTest extends TestCase {
     assertEquals("Id(PK)", sheet.getColumn("Id").toString());
     assertEquals("Id", sheet.getColumn("Id").getName());
     assertEquals("field1", sheet.getColumn("field1").getName());
+    assertEquals("Id",sheet.getPrimaryKeyColumn().getName());
   }
 
   /**
@@ -186,6 +188,9 @@ public class CsvTableTest extends TestCase {
    * Test method for {@link net.pizey.csv.CsvTable#keySet()}.
    */
   public void testKeySet() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    Set<String> s = sheet.keySet();
+    assertEquals("[2, 1]",s.toString());
   }
 
   /**
@@ -194,18 +199,43 @@ public class CsvTableTest extends TestCase {
    * .
    */
   public void testPut() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord r = new CsvRecord(sheet);
+    r.setLineNo(100);
+    r.setRecordNo(99);
+    CsvField pk = new CsvField(sheet.getPrimaryKeyColumn(), "3");
+    r.addField(pk);
+    r.addField(new CsvField(sheet.getColumn("field1"),"new"));
+    sheet.put("3",r);
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,new,,\n", sheet.toString());
+    try {
+      sheet.put("3",r);
+      fail("Should have bombed");
+    } catch (CsvDuplicateKeyException e) { 
+      e = null;
+    }
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvTable#putAll(java.util.Map)}.
    */
   public void testPutAll() {
+    CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable sheet2a = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.LOG);
+    sheet2.putAll(sheet2a);
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2.toString());
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvTable#remove(java.lang.Object)}.
    */
   public void testRemove() {
+    CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable sheet2a = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.LOG);
+    sheet2.putAll(sheet2a);
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2.toString());
+    sheet2.remove("4");
+    assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n", sheet2.toString());
   }
 
   /**
@@ -225,12 +255,22 @@ public class CsvTableTest extends TestCase {
    * {@link net.pizey.csv.CsvTable#containsKey(java.lang.Object)}.
    */
   public void testContainsKey() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    assertTrue(sheet.containsKey("2"));
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvTable#iterator()}.
    */
   public void testIterator() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    int i = 0;
+    for(CsvRecord record : sheet) {
+      i++;
+      assertEquals(new Integer(i).toString(),record.getPrimaryKeyField().value);
+      assertEquals(i -1, record.getRecordNo());
+      assertEquals(i + 1, record.getLineNo());
+    }
   }
 
 }

@@ -82,7 +82,7 @@ public class CsvFileParser {
 
     if (position >= line.length())
       throw new NoSuchElementException("Line " + lineNo + ": Position "
-          + position + ", line length " + line.length());
+          + position + ", line length " + line.length() + " (new line before end quote)");
 
     if (inUnclosedQuotes || (line.charAt(position) == '"') && ++position > 0) {
 
@@ -138,7 +138,7 @@ public class CsvFileParser {
     try {
       line = reader.readLine();
     } catch (IOException e) {
-      throw new CsvParseException("Unexpected IO exception", e);
+      throw new CsvBugException("Unexpected IO exception", e);
     }
     // This should be false anyway if we're called from nextToken()
     emptyLastField = false;
