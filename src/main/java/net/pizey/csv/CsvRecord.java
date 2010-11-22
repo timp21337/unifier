@@ -35,7 +35,62 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
   }
 
   public synchronized void replaceField(CsvField oldField, CsvField newField) {
-    nameToField.put(oldField.column.getName(), newField);
+    nameToField.put(oldField.getColumn().getName(), newField);
+  }
+
+  /**
+   * Unify this record with another, adding new fields.
+   * 
+   * @param unifyWithEmpty
+   *          whether a filled field can unify with an empty one
+   */
+  public void unify(CsvRecord candidateRecord, boolean unifyWithEmpty) {
+    for (CsvField candidateField : candidateRecord) {
+      if (this.nameToField.containsKey(candidateField.getColumn().getName())) {
+        CsvField currentField = nameToField.get(candidateField.getColumn().getName());
+        if (currentField.getValue().equals("") && unifyWithEmpty)
+          replaceField(currentField, candidateField);
+        else if (!currentField.getValue().equals(candidateField.getValue()))
+          throw new CsvRecordUnificationException(lineNo, currentField, candidateField);
+      } else
+        addField(candidateField);
+    }
+
+  }
+
+  /**
+   * Add a field to this record.
+   */
+  public synchronized CsvField addField(CsvField field) {
+    if (field.getColumn().isPrimaryKey())
+      setPrimaryKeyField(field);
+    return nameToField.put(field.getColumn().getName(), field);
+  }
+
+  public CsvField getPrimaryKeyField() {
+    return primaryKeyField;
+  }
+
+  private void setPrimaryKeyField(CsvField pk) {
+    if (primaryKeyField != null && !primaryKeyField.equals(pk))
+      throw new CsvPrimaryKeyAlreadySetException(primaryKeyField, pk);
+    primaryKeyField = pk;
+  }
+
+  public int getRecordNo() {
+    return recordNo;
+  }
+
+  public void setRecordNo(int recordNo) {
+    this.recordNo = recordNo;
+  }
+
+  public int getLineNo() {
+    return lineNo;
+  }
+
+  public void setLineNo(int lineNo) {
+    this.lineNo = lineNo;
   }
 
   @Override
@@ -47,83 +102,15 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     return fieldsReversed.iterator();
   }
 
-  /**
-   * Unify this record with another, adding new fields.
-   * 
-   * @param unifyWithEmpty
-   *          whether a filled field can unify with an empty one
-   */
-  public void unify(CsvRecord candidateRecord, boolean unifyWithEmpty) {
-    for (CsvField candidateField : candidateRecord) {
-      if (this.nameToField.containsKey(candidateField.column.getName())) {
-        CsvField currentField = nameToField.get(candidateField.column.getName());
-        if (currentField.value.equals("") && unifyWithEmpty)
-          replaceField(currentField, candidateField);
-        else if (!currentField.value.equals(candidateField.value))
-          throw new CsvRecordUnificationException(lineNo, currentField, candidateField);
-      } else
-        addField(candidateField);
-    }
-
-  }
-
-  /**
-   * Add a field to this record.
-   */
-  public synchronized void addField(CsvField field) {
-    if (field.column.isPrimaryKey())
-      setPrimaryKeyField(field);
-    nameToField.put(field.column.getName(), field);
-  }
-
-  private void setPrimaryKeyField(CsvField pk) {
-    if (primaryKeyField != null)
-      throw new CsvPrimaryKeyAlreadySetException(primaryKeyField, pk);
-    primaryKeyField = pk;
-  }
-
-  /**
-   * @param recordNo
-   *          The recordNo to set.
-   */
-  public void setRecordNo(int recordNo) {
-    this.recordNo = recordNo;
-  }
-
-  /**
-   * @return Returns the recordNo.
-   */
-  public int getRecordNo() {
-    return recordNo;
-  }
-
-  /**
-   * @param lineNo
-   *          The lineNo to set.
-   */
-  public void setLineNo(int lineNo) {
-    this.lineNo = lineNo;
-  }
-
-  /**
-   * @return Returns the lineNo.
-   */
-  public int getLineNo() {
-    return lineNo;
-  }
-
-  public CsvField getPrimaryKeyField() {
-    return primaryKeyField;
-  }
-
   @Override
   public CsvField get(Object string) {
     return nameToField.get(string);
   }
 
+  /** Would lead to invalid Tables */
   @Override
   public void clear() {
-    nameToField.clear();
+    throw new java.lang.UnsupportedOperationException();
   }
 
   @Override
@@ -152,13 +139,19 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
   }
 
   @Override
-  public CsvField put(String key, CsvField value) {
-    return nameToField.put(key, value);
+  public CsvField put(String key, CsvField field) {
+    if(!field.getColumn().getName().equals(key))
+      throw new CsvInvalidKeyException(
+          "Key ("+key+") not equal to " + 
+          "Field column name (" + field.getColumn().getName() +")");
+    return addField(field);
   }
 
   @Override
   public void putAll(Map<? extends String, ? extends CsvField> m) {
-    nameToField.putAll(m);
+    for (CsvField f : m.values()) {
+      addField(f);
+    }
   }
 
   @Override

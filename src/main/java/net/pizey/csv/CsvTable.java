@@ -123,8 +123,8 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     if (record.getPrimaryKeyField() == null)
       throw new CsvMissingPrimaryKeyException();
     record.setRecordNo(recordNo++);
-    keys.add(record.getPrimaryKeyField().value);
-    keyToRecord.put(record.getPrimaryKeyField().value, record);
+    keys.add(record.getPrimaryKeyField().getValue());
+    keyToRecord.put(record.getPrimaryKeyField().getValue(), record);
   }
 
   /**
@@ -174,9 +174,9 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     csvRecord.addField(record.getPrimaryKeyField());
 
     for (CsvColumn column : columnsInOrder) {
-      if (!column.getName().equals(record.getPrimaryKeyField().column.getName())) {
+      if (!column.getName().equals(record.getPrimaryKeyField().getColumn().getName())) {
         csvRecord.addField(new CsvField(column,
-            record.containsKey(column.getName()) ? record.get(column.getName()).value : ""));
+            record.containsKey(column.getName()) ? record.get(column.getName()).getValue() : ""));
       }
     }
     csvRecord.setLineNo(record.getLineNo());
@@ -195,16 +195,16 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     }
     for (CsvRecord candidateRecord : candidateTable.values()) {
       CsvRecord currentRecord = unified.get(candidateRecord
-          .getPrimaryKeyField().value);
+          .getPrimaryKeyField().getValue());
       if (currentRecord == null) {
         switch (unificationOption) {
         case THROW:
           throw new CsvRecordNotFoundException(
               "Record not found with key equal "
-                  + candidateRecord.getPrimaryKeyField().value);
+                  + candidateRecord.getPrimaryKeyField().getValue());
         case LOG:
           System.err.println("Record not found in " + unified.name
-              + " with key equal " + candidateRecord.getPrimaryKeyField().value
+              + " with key equal " + candidateRecord.getPrimaryKeyField().getValue()
               + " from line " + candidateRecord.getLineNo() + " in file "
               + candidateTable.name);
           break;
@@ -268,7 +268,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     for (String key : keys) {
       CsvRecord record = keyToRecord.get(key);
       for (CsvField field : record) {
-        returnStringBuffer.append(field.value);
+        returnStringBuffer.append(field.getValue());
         returnStringBuffer.append(',');
       }
       returnStringBuffer.append("\n");

@@ -70,13 +70,9 @@ public class CsvFileParserTest extends TestCase {
     }
   }
 
-  public void testUnclosedQuoteAndNewline() {
-    try {
-      new CsvTable("src/test/resources/unclosedQuoteAndNewline.csv", UnificationOptions.LOG);
-      fail("Should have bombed");
-    } catch (CsvParseException e) {
-      assertTrue(e.getCause() instanceof NoSuchElementException);
-    }
+  public void testClosingQuoteOnEndOfLine() { 
+      assertEquals("Id,field1,field2,\n1,f1,f2,  ,  \"         ,\n2,2f1,2f2,\n", 
+          new CsvTable("src/test/resources/missingCommaAfterQuoteAtEndOfLine.csv", UnificationOptions.LOG).toString());
   }
 
   public void testBlankLineAtEndOfFile() {

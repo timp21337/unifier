@@ -21,10 +21,10 @@ public class CsvRecordUnificationException extends CsvException {
   @Override
   public String getMessage() {
     return "Line " + lineNo + " value found for "
-              + candidate.column.getName()
+              + candidate.getColumn().getName()
               + " but not equal to current value : '"
-              + current.value
+              + current.getValue()
               + "' != '"
-              + candidate.value + "'";
+              + candidate.getValue() + "'";
   }
 }

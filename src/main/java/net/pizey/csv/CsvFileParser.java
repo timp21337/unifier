@@ -87,31 +87,33 @@ public class CsvFileParser {
     if (inUnclosedQuotes || (line.charAt(position) == '"') && ++position > 0) {
 
       // we need to allow for quotes inside quoted fields, so now test for ",
-      int q = line.indexOf("\",", position);
+      int closingQuotePosition = line.indexOf("\",", position);
       // if it is not there, we are (hopefully) at the end of a line
-      if (q == -1 && (line.indexOf('"', position) == line.length() - 1))
-        q = line.length() - 1;
+      if (closingQuotePosition == -1) {
+        if (line.indexOf('"', position) == line.length() - 1)
+          closingQuotePosition = line.length() - 1;
 
-      // If we don't find the end quote try reading in more lines
-      // since fields can have \n in them
-      if (q == -1) {
-        String sofar = line.substring(position, line.length());
-        if (!hasNextRecord())
-          throw new IllegalArgumentException("Unclosed quotes on line "
-              + lineNo);
-        return sofar + "\n" + nextToken(true);
+        // If we don't find the end quote try reading in more lines
+        // since fields can have \n in them
+        else {
+          String sofar = line.substring(position, line.length());
+          if (!hasNextRecord())
+            throw new IllegalArgumentException("Unclosed quotes on line "
+                + lineNo);
+          return sofar + "\n" + nextToken(true);
+        }
       }
 
-      String it = line.substring(position, q);
+      String it = line.substring(position, closingQuotePosition);
 
-      ++q;
-      position = q + 1;
-      if (q < line.length()) {
-        if (line.charAt(q) != ',') {
+      ++closingQuotePosition;
+      position = closingQuotePosition + 1;
+      if (closingQuotePosition < line.length()) {
+        if (line.charAt(closingQuotePosition) != ',') {
           position = line.length();
           throw new IllegalArgumentException("No comma after quotes on line "
               + lineNo);
-        } else if (q == line.length() - 1)
+        } else if (closingQuotePosition == line.length() - 1)
           emptyLastField = true;
       }
       return it;

@@ -140,7 +140,7 @@ public class CsvTableTest extends TestCase {
   public void testmultiLine() {
     CsvTable sheet1 = new CsvTable("src/test/resources/multilineField.csv",
         UnificationOptions.LOG);
-    assertEquals("line1\nline2", sheet1.get("1").get("field1").value);
+    assertEquals("line1\nline2", sheet1.get("1").get("field1").getValue());
   }
 
   public void testColumn() {
@@ -179,7 +179,10 @@ public class CsvTableTest extends TestCase {
   public void testClear() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     assertEquals(2, sheet.size());
+    CsvField f = sheet.get("2").get("field2");
+    assertEquals("2f2", f.getValue());
     sheet.clear();
+    assertEquals("2f2", f.getValue());
     assertEquals(0, sheet.size());
   }
 
@@ -188,7 +191,7 @@ public class CsvTableTest extends TestCase {
    */
   public void testGet() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
-    assertEquals("f1", sheet.get("1").get("field1").value);
+    assertEquals("f1", sheet.get("1").get("field1").getValue());
   }
 
   /**
@@ -262,11 +265,21 @@ public class CsvTableTest extends TestCase {
    * Test method for {@link net.pizey.csv.CsvTable#putAll(java.util.Map)}.
    */
   public void testPutAll() {
+    CsvTable sheet1 = new CsvTable("src/test/resources/sheet1.csv", UnificationOptions.LOG);
     CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvTable sheet2a = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.LOG);
+    try { 
+      sheet1.putAll(sheet2);
+      fail("Should have bombed");
+    } catch (CsvDuplicateKeyException e) { 
+      e = null;
+    }
     sheet2.putAll(sheet2a);
     assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n3,3f1,3f2,\n4,4f1,4f2,\n", sheet2
         .toString());
+    sheet1.putAll(sheet2a);
+    assertEquals("Id,field1,\n1,f1,\n2,2f1,\n3,3f1,\n4,4f1,\n", sheet1.toString());
+    
   }
 
   /**
@@ -311,7 +324,7 @@ public class CsvTableTest extends TestCase {
     int i = 0;
     for (CsvRecord record : sheet) {
       i++;
-      assertEquals(new Integer(i).toString(), record.getPrimaryKeyField().value);
+      assertEquals(new Integer(i).toString(), record.getPrimaryKeyField().getValue());
       assertEquals(i - 1, record.getRecordNo());
       assertEquals(i + 1, record.getLineNo());
     }
