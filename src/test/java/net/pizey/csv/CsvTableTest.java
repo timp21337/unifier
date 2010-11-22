@@ -115,7 +115,8 @@ public class CsvTableTest extends TestCase {
     assertEquals(expected, out);
   }
 
-  public void stillBrokentestUnifyLOGunifyWithEmpty() {
+  public void brokentestUnifyLOGunifyWithEmpty() {
+    // need a proper clone
     String sheet1Name = "src/test/resources/sheet1.csv";
     String sheet2Name = "src/test/resources/sheet2.csv";
     String sheet3Name = "src/test/resources/sheet3.csv";

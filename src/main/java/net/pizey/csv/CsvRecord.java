@@ -41,7 +41,7 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
    *          whether a filled field can unify with an empty one
    */
   public void unify(CsvRecord candidateRecord, boolean unifyWithEmpty) {
-    System.err.println("CsvRecord.unify unifywithempty" + unifyWithEmpty);
+    System.err.println("CsvRecord.unify unifywithempty=" + unifyWithEmpty);
     for (CsvField candidateField : candidateRecord) {
       if (this.nameToField.containsKey(candidateField.getColumn().getName())) {
         CsvField currentField = nameToField.get(candidateField.getColumn().getName());
@@ -55,9 +55,10 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
       } else {
         if (unifyWithEmpty) {
           if (!getTable().hasColumn(candidateField.getColumn().getName())) {
+            System.err.println("Adding column:" + candidateField.getColumn());
             getTable().addColumn(candidateField.getColumn());
           }
-          System.err.println("Adding:" + candidateField);
+          System.err.println("Adding value:" + candidateField);
           addField(candidateField);
         }
       }
@@ -86,9 +87,11 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
 
   @Override
   public Iterator<CsvField> iterator() {
+    System.err.println("CsvRecord iterator");
     Vector<CsvField> fieldsReversed = new Vector<CsvField>();
     for (CsvColumn column : getTable().getColumnsInOrder()) {
       fieldsReversed.add(nameToField.get(column.getName()));
+      System.err.println("  adding " + column.getName());
     }
     return fieldsReversed.iterator();
   }

@@ -82,7 +82,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     for (String key : other.keys) {
       this.keys.add(key);
       System.err.println(key + ":" + other.get(key));
-      this.keyToRecord.put(key, other.get(key));
+      this.keyToRecord.put(key, other.get(key).clone());
     }
 
   }
@@ -206,11 +206,11 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     CsvTable unified = new CsvTable(this);
     System.err.println("copy:=\n" + unified);
     System.err.println("copy PK:" + unified.getPrimaryKeyColumn());
-    for (CsvColumn column : candidateTable.columnsInOrder) {
-      if (!unified.hasColumn(column.getName()))
-        if (unifyWithEmpty)
-          unified.addColumn(column);
-    }
+    /*
+     * for (CsvColumn column : candidateTable.columnsInOrder) { if
+     * (!unified.hasColumn(column.getName())) if (unifyWithEmpty)
+     * unified.addColumn(column); }
+     */
     for (CsvRecord candidateRecord : candidateTable.values()) {
       CsvRecord currentRecord = unified.get(candidateRecord.getPrimaryKey());
       if (currentRecord != null)
