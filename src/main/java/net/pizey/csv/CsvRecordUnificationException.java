@@ -10,9 +10,12 @@ public class CsvRecordUnificationException extends CsvException {
   private int lineNo;
   private CsvField current;
   private CsvField candidate;
+  private String tableName;
 
-  public CsvRecordUnificationException(int lineNo, CsvField current, CsvField candidate) {
+  public CsvRecordUnificationException(String tableName, int lineNo, CsvField current,
+      CsvField candidate) {
     super();
+    this.tableName = tableName;
     this.lineNo = lineNo;
     this.current = current;
     this.candidate = candidate;
@@ -20,7 +23,7 @@ public class CsvRecordUnificationException extends CsvException {
 
   @Override
   public String getMessage() {
-    return "Line " + lineNo + " value found for "
+    return "Table " + tableName + " line " + lineNo + " value found for "
               + candidate.getColumn().getName()
               + " but not equal to current value : '"
               + current.getValue()

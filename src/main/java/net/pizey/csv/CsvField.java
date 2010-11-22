@@ -65,4 +65,9 @@ public class CsvField {
     return true;
   }
 
+  @Override
+  protected CsvField clone() {
+    return new CsvField(this.getColumn().clone(), this.getValue());
+  }
+
 }

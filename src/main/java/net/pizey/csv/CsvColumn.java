@@ -36,6 +36,10 @@ public class CsvColumn {
     return isPrimaryKey;
   }
 
+  public void setPrimaryKey(boolean v) {
+    this.isPrimaryKey = v;
+  }
+
   public String toString() {
     return name + (isPrimaryKey ? "(PK)" : "");
   }
@@ -68,6 +72,11 @@ public class CsvColumn {
       return false;
     }
     return true;
+  }
+
+  @Override
+  protected CsvColumn clone() {
+    return new CsvColumn(this.getName(), this.isPrimaryKey());
   }
 
 }

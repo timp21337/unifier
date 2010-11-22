@@ -34,12 +34,7 @@ public class CsvRecordTest extends TestCase {
     CsvField key2 = new CsvField(sheet.getPrimaryKeyColumn(), "2");
     bad.addField(key1);
     bad.addField(key1);
-    try {
-      bad.addField(key2);
-      fail("Should have bombed");
-    } catch (CsvPrimaryKeyAlreadySetException e) {
-      e = null;
-    }
+    bad.addField(key2);
   }
 
   /**
@@ -136,12 +131,12 @@ public class CsvRecordTest extends TestCase {
     try {
       r.clear();
       fail("Should have bombed");
-    } catch (UnsupportedOperationException e){ 
+    } catch (UnsupportedOperationException e) {
       e = null;
     }
     assertFalse(r.isEmpty());
     assertEquals("2f2", f.getValue());
-    assertEquals(2, sheet.size());    
+    assertEquals(2, sheet.size());
   }
 
   /**
@@ -178,8 +173,9 @@ public class CsvRecordTest extends TestCase {
   public void testEntrySet() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r = sheet.get("2");
-    Set<Entry<String,CsvField>> s = r.entrySet();
-    assertEquals("[field2=\"field2\": \"2f2\", Id=\"Id\": \"2\", field1=\"field1\": \"2f1\"]", s.toString());
+    Set<Entry<String, CsvField>> s = r.entrySet();
+    assertEquals("[field2=\"field2\": \"2f2\", Id=\"Id\": \"2\", field1=\"field1\": \"2f1\"]", s
+        .toString());
   }
 
   /**
@@ -208,10 +204,9 @@ public class CsvRecordTest extends TestCase {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r = new CsvRecord(sheet);
     r.setLineNo(100);
-    r.setRecordNo(99);
     CsvField pk = new CsvField(sheet.getPrimaryKeyColumn(), "3");
     r.put("Id", pk);
-    r.put("field1",new CsvField(sheet.getColumn("field1"), "new"));
+    r.put("field1", new CsvField(sheet.getColumn("field1"), "new"));
     assertEquals("Id,field1,field2,\n1,f1,f2,\n2,2f1,2f2,\n", sheet.toString());
     try {
       r.put("3", pk);
@@ -229,9 +224,9 @@ public class CsvRecordTest extends TestCase {
     CsvTable sheet2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r1 = sheet1.get("2");
     CsvRecord r2 = sheet2.get("2");
-    
+
     r1.putAll(r2);
-    
+
     assertEquals("{\"Id\": \"2\",\"field1\": \"2f1\"}", r1.toString());
   }
 
