@@ -324,16 +324,9 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     returnStringBuffer.append("\n");
 
     for (String key : keys) {
-      CsvRecord record = keyToRecord.get(key);
-      if (record == null)
-        throw new NullPointerException("No value for key " + key + " in table " + getName());
-      for (CsvField field : record) {
-        if (field == null)
-          throw new NullPointerException("No value for field " + field + " in table " + getName());
-        returnStringBuffer.append(field.getValue());
-        returnStringBuffer.append(',');
-      }
-      returnStringBuffer.append("\n");
+      CsvRecord record = keyToRecord.get(key);      
+      returnStringBuffer.append(record.toString());
+      returnStringBuffer.append(",\n");
     }
     return returnStringBuffer.toString();
   }
@@ -428,12 +421,9 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     final int prime = 31;
     int result = 1;
     result = prime * result + columnsInOrder.hashCode();
-    System.err.println("ColumnsInOrder" + result);
-    result = prime * result + dataFile.hashCode();
     result = prime * result + keyToRecord.hashCode();
     result = prime * result + keys.hashCode();
     result = prime * result + name.hashCode();
-    result = prime * result + nameToColumn.hashCode();
     result = prime * result + primaryKeyColumn.hashCode();
     result = prime * result + unificationOption.ordinal();
     return result;
@@ -448,33 +438,17 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     if (getClass() != obj.getClass())
       return false;
     CsvTable other = (CsvTable) obj;
-    if (!columnsInOrder.equals(other.columnsInOrder)) {
-      return false;
-    }
-    if (dataFile == null) {
-      if (other.dataFile != null)
-        return false;
-    } else if (!dataFile.equals(other.dataFile)) {
-      return false;
-    }
-    if (!keyToRecord.equals(other.keyToRecord)) {
-      return false;
-    }
-    if (!keys.equals(other.keys))
-      return false;
-    if (name == null) {
-      if (other.name != null)
-        return false;
-    } else if (!name.equals(other.name))
-      return false;
-    if (!nameToColumn.equals(other.nameToColumn))
+    if (!name.equals(other.name))
       return false;
     if (!primaryKeyColumn.equals(other.primaryKeyColumn))
       return false;
-    if (unificationOption == null) {
-      if (other.unificationOption != null)
-        return false;
-    } else if (!unificationOption.equals(other.unificationOption))
+    if (!columnsInOrder.equals(other.columnsInOrder))
+      return false;
+    if (!keys.equals(other.keys))
+      return false;
+    if (!keyToRecord.equals(other.keyToRecord)) 
+      return false;
+    if (!unificationOption.equals(other.unificationOption))
       return false;
 
     return true;

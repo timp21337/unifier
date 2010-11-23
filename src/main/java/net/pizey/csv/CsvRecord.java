@@ -10,7 +10,7 @@ import java.util.Vector;
 /**
  * A record within a CSV File.
  */
-public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
+public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField>, Cloneable  {
 
   private CsvTable table = null;
 

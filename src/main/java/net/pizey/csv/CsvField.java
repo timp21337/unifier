@@ -3,7 +3,7 @@ package net.pizey.csv;
 /**
  * A field within a record of a CSV file.
  */
-public class CsvField {
+public class CsvField implements Cloneable {
 
   private CsvColumn column = null;
 
@@ -25,6 +25,7 @@ public class CsvField {
     this.value = value;
   }
 
+  @Override
   public String toString() {
     return "\"" + column.getName() + "\": \"" + value + "\"";
   }
@@ -37,6 +38,11 @@ public class CsvField {
     return value;
   }
 
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+  @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;

@@ -8,7 +8,7 @@ package net.pizey.csv;
  * Every CsvTable must have one primary key.
  * 
  */
-public class CsvColumn {
+public class CsvColumn implements Cloneable {
 
   private String name = null;
   private boolean isPrimaryKey = false;
@@ -41,6 +41,7 @@ public class CsvColumn {
     this.isPrimaryKey = v;
   }
 
+  @Override
   public String toString() {
     return name + (isPrimaryKey ? "(PK)" : "");
   }

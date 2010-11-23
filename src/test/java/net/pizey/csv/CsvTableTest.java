@@ -126,7 +126,6 @@ public class CsvTableTest extends TestCase {
   }
 
   public void testUnifyLOGunifyWithEmpty() {
-    // need a proper clone
     String sheet1Name = "src/test/resources/sheet1.csv";
     String sheet2Name = "src/test/resources/sheet2.csv";
     String sheet3Name = "src/test/resources/sheet3.csv";
@@ -164,6 +163,22 @@ public class CsvTableTest extends TestCase {
 
   }
 
+  public void testGetUnificationOption() { 
+    String sheetName = "src/test/resources/sheet1.csv";
+
+    assertEquals(UnificationOptions.LOG, new CsvTable(sheetName, UnificationOptions.LOG).getUnificationOption());
+    assertEquals(UnificationOptions.THROW, new CsvTable(sheetName, UnificationOptions.THROW).getUnificationOption());
+    assertEquals(UnificationOptions.DEFAULT, new CsvTable(sheetName, UnificationOptions.DEFAULT).getUnificationOption());
+    
+  }
+  
+  public void testGetColumn() { 
+    String sheetName = "src/test/resources/sheet1.csv";
+    CsvTable sheet = new CsvTable(sheetName, UnificationOptions.LOG);
+    assertTrue(sheet.hasColumn("Id"));
+    assertTrue(sheet.hasColumn("field1"));
+    assertFalse(sheet.hasColumn("field2"));
+  }
   public void testUnifyDEFAULTUnifyWithEmpty() {
     CsvTable holey = new CsvTable("src/test/resources/sheet2WithBlanks.csv",
         UnificationOptions.DEFAULT);
@@ -379,6 +394,48 @@ public class CsvTableTest extends TestCase {
     }
   }
 
+  public void testEquals() { 
+    CsvTable t = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable t2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.DEFAULT);
+    CsvTable t3 = new CsvTable("src/test/resources/sheet2a.csv", UnificationOptions.DEFAULT);
+    
+    assertEquals(t,t);
+    assertEquals(t, new CsvTable(t));
+    assertFalse(t.equals(t2));
+    assertFalse(t.equals(t3));
+    assertFalse(t2.equals(t3));
+    
+    assertFalse(t.equals(null));
+    assertFalse(t.equals(new Object()));
+    
+    CsvTable order1 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable order2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    order2.makeFirstAndPrimary("field1");
+    assertFalse(order1.equals(order2));
+
+    CsvTable key1 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable key2 = new CsvTable("src/test/resources/sheet2.csv", "field1", UnificationOptions.LOG);
+    assertFalse(key1.equals(key2));
+
+    CsvTable records1 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable records2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord extraRecord = new CsvRecord(records2);
+    extraRecord.addField(new CsvField(records2.getPrimaryKeyColumn(),"3"));
+    extraRecord.addField(new CsvField(records2.getColumn("field1"),"3f1"));
+    extraRecord.addField(new CsvField(records2.getColumn("field2"),"3f2"));
+    records2.add(extraRecord);
+    assertFalse(records1.equals(records2));
+
+    CsvTable columns1 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable columns2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    columns2.addColumn(new CsvColumn("field3", false));
+    assertFalse(columns1.equals(columns2));
+    
+    CsvTable fields1 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvTable fields2 = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    fields2.get("1").get("field1").setValue("Changed");
+    assertFalse(fields1.equals(fields2));
+  }
   public void testHashCode() {
     CsvTable t = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     assertEquals(-2094807155, t.getColumnsInOrder().hashCode());
@@ -389,16 +446,10 @@ public class CsvTableTest extends TestCase {
     assertEquals(-903459149, t.getName().hashCode());
     assertEquals(489510, t.getNameToColumn().hashCode());
     assertEquals(41485, t.getPrimaryKeyColumn().hashCode());
-    assertEquals(1701154886, t.hashCode());
+    assertEquals(521094758, t.hashCode());
   }
 
   public void testEnumHashCode() {
-    /**
-     * This integer need not remain consistent from one execution of an
-     * application to another execution of the same application.
-     * 
-     * @see java.lang.Object#hashCode()
-     */
     assertEquals(UnificationOptions.THROW.hashCode(), UnificationOptions.THROW.hashCode());
     assertEquals(UnificationOptions.DEFAULT.hashCode(), UnificationOptions.DEFAULT.hashCode());
     assertEquals(UnificationOptions.LOG.hashCode(), UnificationOptions.LOG.hashCode());
@@ -407,6 +458,14 @@ public class CsvTableTest extends TestCase {
     assertFalse(UnificationOptions.LOG.hashCode() == UnificationOptions.THROW.hashCode());
     assertFalse(UnificationOptions.DEFAULT.hashCode() == UnificationOptions.THROW.hashCode());
 
+    /**
+     * NOTE Previously I was using unificationOption.hashCode() 
+     * 
+     * This integer need not remain consistent from one execution of an
+     * application to another execution of the same application.
+     * 
+     * @see java.lang.Object#hashCode()
+     */
     // assertEquals(190960491, UnificationOptions.THROW.hashCode());
     // assertEquals(2086984721, UnificationOptions.LOG.hashCode());
     // assertEquals(1101799396, UnificationOptions.DEFAULT.hashCode());
