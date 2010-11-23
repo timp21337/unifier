@@ -115,7 +115,7 @@ public class CsvTableTest extends TestCase {
     assertEquals(expected, out);
   }
 
-  public void brokentestUnifyLOGunifyWithEmpty() {
+  public void testUnifyLOGunifyWithEmpty() {
     // need a proper clone
     String sheet1Name = "src/test/resources/sheet1.csv";
     String sheet2Name = "src/test/resources/sheet2.csv";
@@ -369,4 +369,10 @@ public class CsvTableTest extends TestCase {
     }
   }
 
+  public void brokenTestHashCode() {
+    // FIXME Why is this not stable?
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    //assertEquals(-1698502886, sheet.hashCode());    
+  }
+  
 }

@@ -93,4 +93,14 @@ public class CsvColumnTest extends TestCase {
     
   }
 
+  /**
+   * Test method for {@link net.pizey.csv.CsvColumn#clone()}.
+   */
+  public void testClone() {
+    CsvColumn c1 = new CsvColumn("Id", true);
+    assertEquals(c1, c1.clone());
+    CsvColumn c2 = new CsvColumn("val", false);
+    assertEquals(c2, c2.clone());
+  }
+
 }

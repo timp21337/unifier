@@ -76,13 +76,27 @@ public class CsvFieldTest extends TestCase {
     CsvField f2 = new CsvField(new CsvColumn("Id", true), "2");
     assertEquals(1287046,f2.hashCode());
     CsvField f3 = new CsvField(new CsvColumn("Id", false), "2");
+    CsvField f4 = new CsvField(new CsvColumn("Id", false), "4");
     assertEquals(1292812,f3.hashCode());
     assertTrue(f1.equals(f1));
     assertTrue(f1.equals(f2));
     assertFalse(f1.equals(f3));
     assertFalse(f1.equals(null));
     assertFalse(f1.equals(new Object()));
-
+    assertFalse(f3.equals(f4));
+    
+  }
+  
+  /**
+   * Test method for {@link net.pizey.csv.CsvField#clone()}.
+   */
+  public void testClone() {
+    CsvField f1 = new CsvField(new CsvColumn("Id", true), "2");
+    assertEquals(f1,f1.clone());
+    CsvField f2 = new CsvField(new CsvColumn("Id", true), "2");
+    assertEquals(f2, f2.clone());
+    CsvField f3 = new CsvField(new CsvColumn("Id", false), "2");
+    assertEquals(f3, f3.clone());
   }
 
 }

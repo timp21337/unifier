@@ -30,7 +30,6 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
   }
 
   public synchronized void replaceField(CsvField oldField, CsvField newField) {
-    System.err.println("Replacing " + oldField.getColumn().getName() + " with " + newField);
     nameToField.put(oldField.getColumn().getName(), newField);
   }
 
@@ -41,7 +40,6 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
    *          whether a filled field can unify with an empty one
    */
   public void unify(CsvRecord candidateRecord, boolean unifyWithEmpty) {
-    System.err.println("CsvRecord.unify unifywithempty=" + unifyWithEmpty);
     for (CsvField candidateField : candidateRecord) {
       if (this.nameToField.containsKey(candidateField.getColumn().getName())) {
         CsvField currentField = nameToField.get(candidateField.getColumn().getName());
@@ -54,11 +52,7 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
               candidateField);
       } else {
         if (unifyWithEmpty) {
-          if (!getTable().hasColumn(candidateField.getColumn().getName())) {
-            System.err.println("Adding column:" + candidateField.getColumn());
-            getTable().addColumn(candidateField.getColumn());
-          }
-          System.err.println("Adding value:" + candidateField);
+          getTable().addColumn(candidateField.getColumn());
           addField(candidateField);
         }
       }
@@ -87,11 +81,9 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
 
   @Override
   public Iterator<CsvField> iterator() {
-    System.err.println("CsvRecord iterator");
     Vector<CsvField> fieldsReversed = new Vector<CsvField>();
     for (CsvColumn column : getTable().getColumnsInOrder()) {
       fieldsReversed.add(nameToField.get(column.getName()));
-      System.err.println("  adding " + column.getName());
     }
     return fieldsReversed.iterator();
   }
@@ -173,9 +165,20 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     return "{" + returnString + "}";
   }
 
+  /** Clone with same table */
   @Override
-  protected CsvRecord clone() {
-    return new CsvRecord(this.getTable());
+  public CsvRecord clone() {
+    return this.clone(this.getTable());
+  }
+  /**A clone which willproduce an invalid CsvTable 
+   * if added back unaltered to its table.*/
+  public CsvRecord clone(CsvTable table) {
+    CsvRecord newRecord = new CsvRecord(table);
+    for (CsvField field : this){ 
+      newRecord.addField(field);
+    }
+    newRecord.setLineNo(this.lineNo);
+    return newRecord;
   }
 
   @Override
@@ -183,8 +186,9 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     final int prime = 31;
     int result = 1;
     result = prime * result + lineNo;
-    result = prime * result + ((nameToField == null) ? 0 : nameToField.hashCode());
-    result = prime * result + ((table == null) ? 0 : table.hashCode());
+    result = prime * result + nameToField.hashCode();
+    result = prime * result + table.getName().hashCode();
+    result = prime * result + table.getColumnsInOrder().hashCode();
     return result;
   }
 
@@ -199,24 +203,18 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     CsvRecord other = (CsvRecord) obj;
     if (lineNo != other.lineNo)
       return false;
-    if (nameToField == null) {
-      if (other.nameToField != null)
-        return false;
-    } else if (!nameToField.equals(other.nameToField))
+    if (!nameToField.equals(other.nameToField))
       return false;
-    if (table == null) {
-      if (other.table != null)
-        return false;
-    } else if (!table.equals(other.table))
+    if (!table.getName().equals(other.table.getName()))
       return false;
+    if (!table.getColumnsInOrder().equals(other.getTable().getColumnsInOrder()))
+      return false;
+    // Careful of stack overflow for table.equals(other.table)
     return true;
   }
 
   public String getPrimaryKey() {
     CsvColumn primaryKeyColumn = getTable().getPrimaryKeyColumn();
-    if (primaryKeyColumn == null)
-      throw new CsvMissingPrimaryKeyException();
-
     CsvField f = get(primaryKeyColumn.getName());
     if (f == null)
       throw new CsvMissingPrimaryKeyException();

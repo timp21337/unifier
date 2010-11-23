@@ -26,12 +26,12 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
 
   private UnificationOptions unificationOption;
 
-  private HashMap<String, CsvColumn> nameToColumn = new HashMap<String, CsvColumn>();
-  private ArrayList<CsvColumn> columnsInOrder = new ArrayList<CsvColumn>();
-  private CsvColumn primaryKeyColumn = null;
+  private HashMap<String, CsvColumn> nameToColumn;
+  private ArrayList<CsvColumn> columnsInOrder;
+  private CsvColumn primaryKeyColumn;
 
-  private HashMap<String, CsvRecord> keyToRecord = new HashMap<String, CsvRecord>();
-  private ArrayList<String> keys = new ArrayList<String>();
+  private HashMap<String, CsvRecord> keyToRecord;
+  private ArrayList<String> keys;
 
   public CsvTable(String fileName) {
     this(new File(fileName));
@@ -50,6 +50,11 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     this.dataFile = file;
     this.name = removeExtension(file.getName());
     this.unificationOption = unificationOption;
+    this.nameToColumn = new HashMap<String, CsvColumn>();
+    this.columnsInOrder = new ArrayList<CsvColumn>();
+    this.primaryKeyColumn = null; // Set in load()
+    this.keyToRecord = new HashMap<String, CsvRecord>();
+    this.keys = new ArrayList<String>();
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
@@ -82,7 +87,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     for (String key : other.keys) {
       this.keys.add(key);
       System.err.println(key + ":" + other.get(key));
-      this.keyToRecord.put(key, other.get(key).clone());
+      this.keyToRecord.put(key, other.get(key).clone(this));
     }
 
   }
@@ -143,8 +148,11 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   }
 
   public void add(CsvRecord record) {
-    keys.add(record.getPrimaryKey());
-    keyToRecord.put(record.getPrimaryKey(), record);
+    String key = record.getPrimaryKey();
+    if (keyToRecord.containsKey(key))
+      throw new CsvDuplicateKeyException(key);
+    keys.add(key);
+    keyToRecord.put(key, record);
   }
 
   /**
@@ -204,25 +212,8 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
 
   public CsvTable unify(CsvTable candidateTable, boolean unifyWithEmpty) {
     CsvTable unified = new CsvTable(this);
-    System.err.println("copy:=\n" + unified);
-    System.err.println("copy PK:" + unified.getPrimaryKeyColumn());
-    /*
-     * for (CsvColumn column : candidateTable.columnsInOrder) { if
-     * (!unified.hasColumn(column.getName())) if (unifyWithEmpty)
-     * unified.addColumn(column); }
-     */
     for (CsvRecord candidateRecord : candidateTable.values()) {
       CsvRecord currentRecord = unified.get(candidateRecord.getPrimaryKey());
-      if (currentRecord != null)
-        System.err.println("Unifying "
-            + candidateTable.getPrimaryKeyColumn().getName() + ":"
-            + candidateRecord.getPrimaryKey()
-            + " with "
-            + unified.getPrimaryKeyColumn().getName() + ":"
-            + unified.get(candidateRecord.getPrimaryKey()).getPrimaryKey());
-      else
-        System.err.println("Null" + candidateTable.getPrimaryKeyColumn().getName() + ":"
-            + candidateRecord.getPrimaryKey());
       if (currentRecord == null) {
         String message = "Record not found in " + unified.name
             + " with key equal " + candidateRecord.getPrimaryKey()
@@ -242,7 +233,6 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
       } else
         currentRecord.unify(candidateRecord, unifyWithEmpty);
     }
-    System.err.println("Returning\n" + unified);
     return unified;
   }
 
@@ -269,7 +259,6 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
       String newKey = r.get(columnName).getValue();
       newKeys.add(newKey);
       reKeyed.put(newKey, r);
-      System.err.println(oldKey + " becomes " + newKey);
     }
     keys = newKeys;
     keyToRecord = reKeyed;
@@ -360,7 +349,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   /** Put, defaulting missing fields, dropping unknown fields. */
   public CsvRecord put(String key, CsvRecord value) {
     if (keys.contains(key))
-      throw new CsvDuplicateKeyException("Key " + key + " already exists");
+      throw new CsvDuplicateKeyException(key);
     keys.add(key);
     return keyToRecord.put(key, addMissingFields(value));
   }
@@ -410,14 +399,14 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((columnsInOrder == null) ? 0 : columnsInOrder.hashCode());
-    result = prime * result + ((dataFile == null) ? 0 : dataFile.hashCode());
-    result = prime * result + ((keyToRecord == null) ? 0 : keyToRecord.hashCode());
-    result = prime * result + ((keys == null) ? 0 : keys.hashCode());
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    result = prime * result + ((nameToColumn == null) ? 0 : nameToColumn.hashCode());
-    result = prime * result + ((primaryKeyColumn == null) ? 0 : primaryKeyColumn.hashCode());
-    result = prime * result + ((unificationOption == null) ? 0 : unificationOption.hashCode());
+    result = prime * result + columnsInOrder.hashCode();
+    result = prime * result + dataFile.hashCode();
+    result = prime * result + keyToRecord.hashCode();
+    result = prime * result + keys.hashCode();
+    result = prime * result + name.hashCode();
+    result = prime * result + nameToColumn.hashCode();
+    result = prime * result + primaryKeyColumn.hashCode();
+    result = prime * result + unificationOption.hashCode();
     return result;
   }
 
@@ -434,21 +423,18 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
       if (other.columnsInOrder != null)
         return false;
     } else if (!columnsInOrder.equals(other.columnsInOrder)) {
-      System.err.println("CIO");
       return false;
     }
     if (dataFile == null) {
       if (other.dataFile != null)
         return false;
     } else if (!dataFile.equals(other.dataFile)) {
-      System.err.println("File");
       return false;
     }
     if (keyToRecord == null) {
       if (other.keyToRecord != null)
         return false;
     } else if (!keyToRecord.equals(other.keyToRecord)) {
-      System.err.println("ktr");
       return false;
     }
     if (keys == null) {

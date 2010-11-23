@@ -12,6 +12,7 @@ public class AllTests extends TestCase {
 
     TestSuite ts = new TestSuite();
     ts.addTestSuite(CsvFieldTest.class);
+    ts.addTestSuite(CsvColumnTest.class);
     ts.addTestSuite(CsvRecordTest.class);
     ts.addTestSuite(CsvTableTest.class);
     ts.addTestSuite(CsvFileParserTest.class);

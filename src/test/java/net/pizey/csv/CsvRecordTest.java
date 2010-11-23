@@ -106,10 +106,19 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for {@link net.pizey.csv.CsvRecord#getPrimaryKeyField()}.
+   * Test method for {@link net.pizey.csv.CsvRecord#getPrimaryKey()}.
    */
-  public void testGetPrimaryKeyField() {
-
+  public void testGetPrimaryKey() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord r = sheet.get("2");
+    assertEquals("2",r.getPrimaryKey());
+    CsvRecord unset = new CsvRecord(sheet);
+    unset.addField(new CsvField(new CsvColumn("field1", false),"3"));
+    try {
+      unset.getPrimaryKey();
+    } catch (CsvMissingPrimaryKeyException e) { 
+      e = null;
+    }
   }
 
   /**
@@ -263,6 +272,25 @@ public class CsvRecordTest extends TestCase {
    */
   public void testToString() {
 
+  }
+  
+  public void testHashCode() { 
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord r = sheet.get("2");
+    assertEquals(-1559758908, r.hashCode());
+    
+  }
+  public void testEquals() { 
+    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord r = sheet.get("2");
+    assertEquals(r, r.clone(r.getTable()));
+    try { 
+      r.getTable().add(r.clone());
+    } catch (CsvDuplicateKeyException e) { 
+      e = null;
+    }
+    assertFalse(r.equals(null));
+    assertFalse(r.equals(new Object()));
   }
 
 }
