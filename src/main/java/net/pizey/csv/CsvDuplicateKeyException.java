@@ -4,18 +4,17 @@ public class CsvDuplicateKeyException extends CsvException {
 
   private static final long serialVersionUID = 7341450818447161242L;
   private String key;
+  private int lineNo;
 
-  public CsvDuplicateKeyException(String key) {
+  public CsvDuplicateKeyException(int lineNo, String key) {
     super();
     this.key = key;
+    this.lineNo = lineNo;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Throwable#getMessage()
-   */
   @Override
   public String getMessage() {
-    return "Key " + key + " already exists";
+    return "Line " + lineNo + ": Key " + key + " already exists";
   }
 
 }

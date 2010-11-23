@@ -22,6 +22,7 @@ public class CsvColumn {
    *          flag to indicate this is the primary key column.
    */
   public CsvColumn(String name, boolean isPrimaryKey) {
+    super();
     if (name == null)
       throw new NullPointerException();
     this.name = name;

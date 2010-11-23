@@ -17,7 +17,7 @@ public class AllTests extends TestCase {
     ts.addTestSuite(CsvTableTest.class);
     ts.addTestSuite(CsvFileParserTest.class);
     ts.addTestSuite(DefaultingUnifierTest.class);
-
+    ts.addTestSuite(ReorderAndUnifyTest.class);
     return ts;
 
   }

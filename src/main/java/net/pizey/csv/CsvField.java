@@ -16,6 +16,7 @@ public class CsvField {
    *          the field value as a string
    */
   public CsvField(CsvColumn column, String value) {
+    super();
     if (column == null)
       throw new NullPointerException();
     if (value == null)

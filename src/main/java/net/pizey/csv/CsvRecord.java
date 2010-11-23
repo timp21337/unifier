@@ -155,7 +155,7 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     return nameToField.values();
   }
 
-  public String toString() {
+  public String toJSON() {
     String returnString = "";
     for (CsvField f : this) {
       if (!returnString.equals(""))
@@ -165,16 +165,30 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField> {
     return "{" + returnString + "}";
   }
 
+  @Override
+  public String toString() {
+    String returnString = "";
+    for (CsvField f : this) {
+      if (!returnString.equals(""))
+        returnString += ",";
+      returnString += f.getValue();
+    }
+    return returnString;
+  }
+
   /** Clone with same table */
   @Override
   public CsvRecord clone() {
     return this.clone(this.getTable());
   }
-  /**A clone which willproduce an invalid CsvTable 
-   * if added back unaltered to its table.*/
+
+  /**
+   * A clone which willproduce an invalid CsvTable if added back unaltered to
+   * its table.
+   */
   public CsvRecord clone(CsvTable table) {
     CsvRecord newRecord = new CsvRecord(table);
-    for (CsvField field : this){ 
+    for (CsvField field : this) {
       newRecord.addField(field);
     }
     newRecord.setLineNo(this.lineNo);

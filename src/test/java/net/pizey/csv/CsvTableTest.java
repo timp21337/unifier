@@ -253,7 +253,7 @@ public class CsvTableTest extends TestCase {
     String values = "";
     for (Entry<String, CsvRecord> e : sheet.entrySet()) {
       keys = keys + (keys != "" ? "," : "") + e.getKey();
-      values = values + (values != "" ? "," : "") + e.getValue();
+      values = values + (values != "" ? "," : "") + e.getValue().toJSON();
     }
     assertEquals("2,1", keys);
     // Not the order that you might expect
@@ -369,10 +369,10 @@ public class CsvTableTest extends TestCase {
     }
   }
 
-  public void brokenTestHashCode() {
+  public void testHashCode() {
     // FIXME Why is this not stable?
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
-    //assertEquals(-1698502886, sheet.hashCode());    
+    // assertEquals(-975531618, sheet.hashCode());
   }
-  
+
 }

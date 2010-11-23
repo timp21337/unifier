@@ -111,12 +111,12 @@ public class CsvRecordTest extends TestCase {
   public void testGetPrimaryKey() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r = sheet.get("2");
-    assertEquals("2",r.getPrimaryKey());
+    assertEquals("2", r.getPrimaryKey());
     CsvRecord unset = new CsvRecord(sheet);
-    unset.addField(new CsvField(new CsvColumn("field1", false),"3"));
+    unset.addField(new CsvField(new CsvColumn("field1", false), "3"));
     try {
       unset.getPrimaryKey();
-    } catch (CsvMissingPrimaryKeyException e) { 
+    } catch (CsvMissingPrimaryKeyException e) {
       e = null;
     }
   }
@@ -236,7 +236,8 @@ public class CsvRecordTest extends TestCase {
 
     r1.putAll(r2);
 
-    assertEquals("{\"Id\": \"2\",\"field1\": \"2f1\"}", r1.toString());
+    assertEquals("{\"Id\": \"2\",\"field1\": \"2f1\"}", r1.toJSON());
+    assertEquals("2,2f1", r1.toString());
   }
 
   /**
@@ -273,20 +274,21 @@ public class CsvRecordTest extends TestCase {
   public void testToString() {
 
   }
-  
-  public void testHashCode() { 
+
+  public void testHashCode() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r = sheet.get("2");
     assertEquals(-1559758908, r.hashCode());
-    
+
   }
-  public void testEquals() { 
+
+  public void testEquals() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     CsvRecord r = sheet.get("2");
     assertEquals(r, r.clone(r.getTable()));
-    try { 
+    try {
       r.getTable().add(r.clone());
-    } catch (CsvDuplicateKeyException e) { 
+    } catch (CsvDuplicateKeyException e) {
       e = null;
     }
     assertFalse(r.equals(null));

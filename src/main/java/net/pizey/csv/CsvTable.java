@@ -34,18 +34,26 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   private ArrayList<String> keys;
 
   public CsvTable(String fileName) {
-    this(new File(fileName));
+    this(new File(fileName), null);
+  }
+
+  public CsvTable(String fileName, String primeKeyName) {
+    this(new File(fileName), primeKeyName);
   }
 
   public CsvTable(String fileName, UnificationOptions unificationOption) {
-    this(new File(fileName), unificationOption);
+    this(new File(fileName), null, unificationOption);
   }
 
-  public CsvTable(File file) {
-    this(file, UnificationOptions.THROW);
+  public CsvTable(String fileName, String primeKeyName, UnificationOptions unificationOption) {
+    this(new File(fileName), primeKeyName, unificationOption);
   }
 
-  public CsvTable(File file, UnificationOptions unificationOption) {
+  public CsvTable(File file, String primeKeyName) {
+    this(file, primeKeyName, UnificationOptions.THROW);
+  }
+
+  public CsvTable(File file, String primeKeyName, UnificationOptions unificationOption) {
     super();
     this.dataFile = file;
     this.name = removeExtension(file.getName());
@@ -58,7 +66,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
-      load(new CsvFileParser(reader));
+      load(new CsvFileParser(reader), primeKeyName);
       reader.close();
     } catch (IOException e) {
       // Naughty me, FileNotFoundException is provocable,
@@ -86,7 +94,6 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     this.keyToRecord = new HashMap<String, CsvRecord>();
     for (String key : other.keys) {
       this.keys.add(key);
-      System.err.println(key + ":" + other.get(key));
       this.keyToRecord.put(key, other.get(key).clone(this));
     }
 
@@ -100,9 +107,9 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
    * @throws CSVWriteDownException
    * @throws NoPrimaryKeyInCSVTableException
    */
-  private void load(CsvFileParser parser) {
+  private void load(CsvFileParser parser, String primeKeyName) {
 
-    defineColumns(parser);
+    defineColumns(parser, primeKeyName);
     CsvRecord record;
     while (null != (record = loadRecord(parser))) {
       add(record);
@@ -115,15 +122,20 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
    * names - this needs to be validated against expected values, and the order
    * of the fields established.
    * 
+   * @param primeKeyName
+   *          Optional key name
+   * 
    */
-  private void defineColumns(CsvFileParser parser) {
+  private void defineColumns(CsvFileParser parser, String primeKeyName) {
     parser.hasNextRecord(); // FIXME relying upon side effect
 
     while (parser.recordHasMoreFields()) {
       String colName = parser.nextField();
       // First column is always the key
       if (!colName.equals("")) {
-        CsvColumn column = new CsvColumn(colName, columnsInOrder.size() == 0);
+        boolean isPrimeKey = primeKeyName == null ?
+            columnsInOrder.size() == 0 : colName.equals(primeKeyName);
+        CsvColumn column = new CsvColumn(colName, isPrimeKey);
         if (column.isPrimaryKey())
           primaryKeyColumn = column;
         addColumn(column);
@@ -145,14 +157,6 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
 
   public CsvColumn getPrimaryKeyColumn() {
     return primaryKeyColumn;
-  }
-
-  public void add(CsvRecord record) {
-    String key = record.getPrimaryKey();
-    if (keyToRecord.containsKey(key))
-      throw new CsvDuplicateKeyException(key);
-    keys.add(key);
-    keyToRecord.put(key, record);
   }
 
   /**
@@ -345,13 +349,17 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     return keyToRecord.keySet();
   }
 
+  public void add(CsvRecord record) {
+    put(record.getPrimaryKey(), record);
+  }
+
   @Override
   /** Put, defaulting missing fields, dropping unknown fields. */
-  public CsvRecord put(String key, CsvRecord value) {
+  public CsvRecord put(String key, CsvRecord record) {
     if (keys.contains(key))
-      throw new CsvDuplicateKeyException(key);
+      throw new CsvDuplicateKeyException(record.getLineNo(), key);
     keys.add(key);
-    return keyToRecord.put(key, addMissingFields(value));
+    return keyToRecord.put(key, addMissingFields(record));
   }
 
   @Override
