@@ -50,6 +50,16 @@ public class CsvTableTest extends TestCase {
 
   }
 
+  public void testConstructWithPrimeKey() {
+    String sheet1Name = "src/test/resources/sheet1.csv";
+
+    CsvTable sheet1 = new CsvTable(sheet1Name, "Id");
+    CsvTable sheet2 = new CsvTable(sheet1);
+    assertTrue(sheet1.equals(sheet2));
+    assertEquals(sheet1, sheet2);
+
+  }
+
   public void testMakeFirst() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv");
 
@@ -371,8 +381,22 @@ public class CsvTableTest extends TestCase {
 
   public void testHashCode() {
     // FIXME Why is this not stable?
-    CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
-    // assertEquals(-975531618, sheet.hashCode());
+    CsvTable t = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    assertEquals(-2094807155, t.getColumnsInOrder().hashCode());
+    assertEquals(-1088807178, t.getDataFile().hashCode());
+
+    assertEquals(1268261037, t.getKeyToRecord().hashCode());
+    assertEquals(2530, t.getKeys().hashCode());
+    assertEquals(-903459149, t.getName().hashCode());
+    assertEquals(489510, t.getNameToColumn().hashCode());
+    assertEquals(41485, t.getPrimaryKeyColumn().hashCode());
+    assertEquals(1701154886, t.hashCode());
   }
 
+  public void testEnumHashCode() {
+    // So you thought you understood java....
+    // assertEquals(190960491, UnificationOptions.THROW.hashCode());
+    // assertEquals(2086984721, UnificationOptions.LOG.hashCode());
+    // assertEquals(1101799396, UnificationOptions.DEFAULT.hashCode());
+  }
 }

@@ -25,7 +25,6 @@ public class ReorderAndUnifyTest extends TestCase {
         UnificationOptions.DEFAULT);
 
     sheet1.makeFirstAndPrimary("ID");
-    System.out.println(sheet1.toString());
     sheet2.makeFirstAndPrimary("ID");
     sheet3.makeFirstAndPrimary("ID");
 

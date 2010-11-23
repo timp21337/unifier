@@ -70,9 +70,10 @@ public class CsvFileParserTest extends TestCase {
     }
   }
 
-  public void testClosingQuoteOnEndOfLine() { 
-      assertEquals("Id,field1,field2,\n1,f1,f2,  ,  \"         ,\n2,2f1,2f2,\n", 
-          new CsvTable("src/test/resources/missingCommaAfterQuoteAtEndOfLine.csv", UnificationOptions.LOG).toString());
+  public void testClosingQuoteOnEndOfLine() {
+    assertEquals("Id,field1,field2,\n1,f1,f2,  ,  \"         ,\n2,2f1,2f2,\n",
+          new CsvTable("src/test/resources/missingCommaAfterQuoteAtEndOfLine.csv",
+              UnificationOptions.LOG).toString());
   }
 
   public void testBlankLineAtEndOfFile() {
@@ -80,7 +81,6 @@ public class CsvFileParserTest extends TestCase {
       new CsvTable("src/test/resources/blankLineAtEndOfFile.csv", UnificationOptions.LOG);
       fail("Should have bombed");
     } catch (CsvParseException e) {
-      System.err.println(e.getMessage());
       assertTrue(e.getCause() instanceof NoSuchElementException);
     }
   }
