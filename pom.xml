@@ -10,6 +10,9 @@
   <name>unifier</name>
   <url>https://github.com/timp21337/unifier</url>
   <inceptionYear>2010</inceptionYear>
+  <description>
+  A CSV sheet unifier based upon a model of a CSV file as an ordered map of keys to records and records as an ordered map of field names to values. 
+  </description>
 
   <scm>
     <connection>
@@ -34,6 +37,35 @@ scm:cvs:ext:timp@paneris.net:/usr/cvsroot:unifier
 https://github.com/timp21337/unifier/issues
     </url>
   </issueManagement>
+
+  <licenses>
+   <license>
+    <name>Gnu Public License</name>
+    <url>http://www.gnu.org/copyleft/gpl.html</url>
+    <distribution>repo</distribution>
+   </license>
+   <license>
+    <name>Apache Software License, Version 2.0</name>
+    <url>
+     http://www.apache.org/licenses/LICENSE-2.0.txt
+    </url>
+    <distribution>repo</distribution>
+   </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Tim Pizey</name>
+      <id>timp21337</id>
+      <email>timp AT paneris.org</email>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>0</timezone>
+      <url>http://pizey.net/~timp</url>
+    </developer>
+  </developers>
+
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
