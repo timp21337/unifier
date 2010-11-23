@@ -380,7 +380,6 @@ public class CsvTableTest extends TestCase {
   }
 
   public void testHashCode() {
-    // FIXME Why is this not stable?
     CsvTable t = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
     assertEquals(-2094807155, t.getColumnsInOrder().hashCode());
     assertEquals(-1088807178, t.getDataFile().hashCode());
@@ -394,7 +393,20 @@ public class CsvTableTest extends TestCase {
   }
 
   public void testEnumHashCode() {
-    // So you thought you understood java....
+    /**
+     * This integer need not remain consistent from one execution of an
+     * application to another execution of the same application.
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    assertEquals(UnificationOptions.THROW.hashCode(), UnificationOptions.THROW.hashCode());
+    assertEquals(UnificationOptions.DEFAULT.hashCode(), UnificationOptions.DEFAULT.hashCode());
+    assertEquals(UnificationOptions.LOG.hashCode(), UnificationOptions.LOG.hashCode());
+
+    assertFalse(UnificationOptions.LOG.hashCode() == UnificationOptions.DEFAULT.hashCode());
+    assertFalse(UnificationOptions.LOG.hashCode() == UnificationOptions.THROW.hashCode());
+    assertFalse(UnificationOptions.DEFAULT.hashCode() == UnificationOptions.THROW.hashCode());
+
     // assertEquals(190960491, UnificationOptions.THROW.hashCode());
     // assertEquals(2086984721, UnificationOptions.LOG.hashCode());
     // assertEquals(1101799396, UnificationOptions.DEFAULT.hashCode());
