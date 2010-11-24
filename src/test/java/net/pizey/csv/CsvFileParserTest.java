@@ -29,8 +29,7 @@ public class CsvFileParserTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvFileParser#CsvFileParser(java.io.BufferedReader)}.
+   * Test method for {@link net.pizey.csv.CsvFileParser#CsvFileParser(java.io.BufferedReader)}.
    */
   public void testCsvFileParser() throws Exception {
     String fileName = "src/test/resources/sheet1.csv";

@@ -10,8 +10,8 @@ package net.pizey.csv;
  */
 public class CsvColumn implements Cloneable {
 
-  private String name = null;
-  private boolean isPrimaryKey = false;
+  private String name;
+  private boolean isPrimaryKey;
 
   /**
    * Constructor for a key value into another table.
@@ -77,8 +77,7 @@ public class CsvColumn implements Cloneable {
   }
 
   @Override
-  protected CsvColumn clone() {
-    return new CsvColumn(this.getName(), this.isPrimaryKey());
+  protected Object clone() {
+    return new CsvColumn(this.name, this.isPrimaryKey);
   }
-
 }

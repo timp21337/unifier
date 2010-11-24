@@ -10,9 +10,10 @@ import java.util.Vector;
 /**
  * A record within a CSV File.
  */
-public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField>, Cloneable  {
+public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField>, Cloneable {
 
-  private CsvTable table = null;
+  /** Table this Record belongs to. */
+  private CsvTable table;
 
   /** The line number of the CSV file. */
   private int lineNo;
@@ -178,13 +179,12 @@ public class CsvRecord implements Iterable<CsvField>, Map<String, CsvField>, Clo
 
   /** Clone with same table */
   @Override
-  public CsvRecord clone() {
+  public Object clone() {
     return this.clone(this.getTable());
   }
 
   /**
-   * A clone which willproduce an invalid CsvTable if added back unaltered to
-   * its table.
+   * A clone which will produce an invalid CsvTable if added back, unaltered to its original table.
    */
   public CsvRecord clone(CsvTable table) {
     CsvRecord newRecord = new CsvRecord(table);

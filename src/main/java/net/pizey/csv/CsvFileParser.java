@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
- * A utility for tokenising a file made up of comma-separated variables. We
- * allow for fields having returns in them.
+ * A utility for tokenising a file made up of comma-separated variables. We allow for fields having returns in them.
  * 
  * <PRE>
  *   foo, bar om,,"baz, ,oof",xyz,   ->
@@ -18,9 +17,8 @@ import java.util.NoSuchElementException;
  *   "foo", "bar\u0015bar\u0015bar", "baz"
  * </PRE>
  * 
- * Each record (which is usually a line, unless some fields have a line break in
- * them) is accessed one at a time by calling <code>nextRecord()</code>. Within
- * each record <code>recordHasMoreFields()</code> and <code>nextField()</code>
+ * Each record (which is usually a line, unless some fields have a line break in them) is accessed one at a time by
+ * calling <code>nextRecord()</code>. Within each record <code>recordHasMoreFields()</code> and <code>nextField()</code>
  * can be used like an Enumeration to iterate through the fields.
  * 
  * @author mylesc, based heavily on original CSVStringEnumeration by williamc
@@ -66,14 +64,14 @@ public class CsvFileParser {
   /**
    * @return the next token as a String
    */
-  public String nextField() {
+  public String nextField() throws IOException {
     return nextToken(false);
   }
 
   /**
    * @return the next token as a String
    */
-  private String nextToken(boolean inUnclosedQuotes) {
+  private String nextToken(boolean inUnclosedQuotes) throws IOException {
 
     if (emptyLastField) {
       emptyLastField = false;
@@ -98,7 +96,7 @@ public class CsvFileParser {
         else {
           String sofar = line.substring(position, line.length());
           if (!hasNextRecord())
-            throw new IllegalArgumentException("Unclosed quotes on line "
+            throw new IllegalArgumentException("Unclosed quoted field on line "
                 + lineNo);
           return sofar + "\n" + nextToken(true);
         }
@@ -136,12 +134,8 @@ public class CsvFileParser {
   /**
    * @return whether there is another line
    */
-  public boolean hasNextRecord() {
-    try {
-      line = reader.readLine();
-    } catch (IOException e) {
-      throw new CsvBugException("Unexpected IO exception", e);
-    }
+  public boolean hasNextRecord() throws IOException {
+    line = reader.readLine();
     // This should be false anyway if we're called from nextToken()
     emptyLastField = false;
     position = 0;

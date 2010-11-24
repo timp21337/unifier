@@ -107,7 +107,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
    * @throws CSVWriteDownException
    * @throws NoPrimaryKeyInCSVTableException
    */
-  private void load(CsvFileParser parser, String primeKeyName) {
+  private void load(CsvFileParser parser, String primeKeyName) throws IOException {
 
     defineColumns(parser, primeKeyName);
     CsvRecord record;
@@ -118,15 +118,14 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   }
 
   /**
-   * Process the first line to define columns. The first line contains the field
-   * names - this needs to be validated against expected values, and the order
-   * of the fields established.
+   * Process the first line to define columns. The first line contains the field names - this needs to be validated
+   * against expected values, and the order of the fields established.
    * 
    * @param primeKeyName
    *          Optional key name
    * 
    */
-  private void defineColumns(CsvFileParser parser, String primeKeyName) {
+  private void defineColumns(CsvFileParser parser, String primeKeyName) throws IOException {
     parser.hasNextRecord(); // FIXME relying upon side effect
 
     while (parser.recordHasMoreFields()) {
@@ -180,13 +179,12 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   }
 
   /**
-   * Reads the file until is has seen an object's-worth of field values (ie
-   * until it sees an EOF or a line starting with '$') which it returns in a
-   * CsvRecord (null if there are no field values).
+   * Reads the file until is has seen an object's-worth of field values (ie until it sees an EOF or a line starting with
+   * '$') which it returns in a CsvRecord (null if there are no field values).
    * 
    * @return a new CSVRecord
    */
-  public CsvRecord loadRecord(CsvFileParser parser) {
+  public CsvRecord loadRecord(CsvFileParser parser) throws IOException {
     // FIXME relying on side effect
     if (!parser.hasNextRecord())
       return null;
@@ -203,12 +201,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
         String message = "Problem with data field no. " + (i + 1) + " of "
             + columnsInOrder.size() + " in " + dataFile + " line "
             + parser.getLineNo();
-
-        if (value == null) {
-          message += " (Check last line of file) : " + f.toString();
-        } else {
-          message += ", Value:" + value + ": " + f.toString();
-        }
+        message += " (Check last line of file)";
         throw new CsvParseException(message, f);
       }
       CsvColumn col = (CsvColumn) columnsInOrder.get(i);
@@ -324,7 +317,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     returnStringBuffer.append("\n");
 
     for (String key : keys) {
-      CsvRecord record = keyToRecord.get(key);      
+      CsvRecord record = keyToRecord.get(key);
       returnStringBuffer.append(record.toString());
       returnStringBuffer.append(",\n");
     }
@@ -446,7 +439,7 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
       return false;
     if (!keys.equals(other.keys))
       return false;
-    if (!keyToRecord.equals(other.keyToRecord)) 
+    if (!keyToRecord.equals(other.keyToRecord))
       return false;
     if (!unificationOption.equals(other.unificationOption))
       return false;

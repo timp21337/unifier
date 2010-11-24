@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 /**
  * @author timp
  * @since 21 Nov 2010 20:59:48
- *
+ * 
  */
 public class CsvColumnTest extends TestCase {
 
@@ -37,7 +37,7 @@ public class CsvColumnTest extends TestCase {
     CsvColumn c4 = new CsvColumn("Id", true);
     assertEquals(41485, c1.hashCode());
     CsvColumn c5 = new CsvColumn("val", false);
-    
+
     assertTrue(c1.equals(c1));
     assertTrue(c1.equals(c4));
     assertFalse(c3.equals(c4));
@@ -45,34 +45,34 @@ public class CsvColumnTest extends TestCase {
     assertTrue(c2.equals(c5));
     assertFalse(c1.equals(null));
     assertFalse(c1.equals(new Object()));
-    
+
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvColumn#CsvColumn(java.lang.String, boolean)}.
    */
   public void testCsvColumn() {
-    try { 
-      new CsvColumn(null,false);
+    try {
+      new CsvColumn(null, false);
       fail("Should have bombed");
-    } catch (NullPointerException e) { 
+    } catch (NullPointerException e) {
       e = null;
     }
-    
+
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvColumn#getName()}.
    */
   public void testGetName() {
-    
+
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvColumn#isPrimaryKey()}.
    */
   public void testIsPrimaryKey() {
-    
+
   }
 
   /**
@@ -83,14 +83,14 @@ public class CsvColumnTest extends TestCase {
     assertEquals("Id(PK)", c1.toString());
     CsvColumn c2 = new CsvColumn("val", false);
     assertEquals("val", c2.toString());
-    
+
   }
 
   /**
    * Test method for {@link net.pizey.csv.CsvColumn#equals(java.lang.Object)}.
    */
   public void testEqualsObject() {
-    
+
   }
 
   /**

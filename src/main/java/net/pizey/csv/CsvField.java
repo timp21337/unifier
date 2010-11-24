@@ -5,9 +5,9 @@ package net.pizey.csv;
  */
 public class CsvField implements Cloneable {
 
-  private CsvColumn column = null;
+  private CsvColumn column;
 
-  private String value = null;
+  private String value;
 
   /**
    * @param column
@@ -73,8 +73,8 @@ public class CsvField implements Cloneable {
   }
 
   @Override
-  protected CsvField clone() {
-    return new CsvField(this.getColumn().clone(), this.getValue());
+  protected Object clone() {
+    return new CsvField((CsvColumn) this.getColumn().clone(), this.getValue());
   }
 
 }

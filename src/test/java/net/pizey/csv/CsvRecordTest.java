@@ -1,5 +1,6 @@
 package net.pizey.csv;
 
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.Map.Entry;
 
@@ -38,17 +39,14 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#CsvRecord(net.pizey.csv.CsvTable)}.
+   * Test method for {@link net.pizey.csv.CsvRecord#CsvRecord(net.pizey.csv.CsvTable)}.
    */
   public void testCsvRecord() {
 
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#replaceField(net.pizey.csv.CsvField, net.pizey.csv.CsvField)}
-   * .
+   * Test method for {@link net.pizey.csv.CsvRecord#replaceField(net.pizey.csv.CsvField, net.pizey.csv.CsvField)} .
    */
   public void testReplaceField() {
 
@@ -62,16 +60,14 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#unify(net.pizey.csv.CsvRecord, boolean)}.
+   * Test method for {@link net.pizey.csv.CsvRecord#unify(net.pizey.csv.CsvRecord, boolean)}.
    */
   public void testUnify() {
 
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#addField(net.pizey.csv.CsvField)}.
+   * Test method for {@link net.pizey.csv.CsvRecord#addField(net.pizey.csv.CsvField)}.
    */
   public void testAddField() {
 
@@ -149,8 +145,7 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#containsKey(java.lang.Object)}.
+   * Test method for {@link net.pizey.csv.CsvRecord#containsKey(java.lang.Object)}.
    */
   public void testContainsKey() {
 
@@ -165,8 +160,7 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#containsValue(java.lang.Object)}.
+   * Test method for {@link net.pizey.csv.CsvRecord#containsValue(java.lang.Object)}.
    */
   public void testContainsValue() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
@@ -205,9 +199,7 @@ public class CsvRecordTest extends TestCase {
   }
 
   /**
-   * Test method for
-   * {@link net.pizey.csv.CsvRecord#put(java.lang.String, net.pizey.csv.CsvField)}
-   * .
+   * Test method for {@link net.pizey.csv.CsvRecord#put(java.lang.String, net.pizey.csv.CsvField)} .
    */
   public void testPut() {
     CsvTable sheet = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
@@ -287,7 +279,7 @@ public class CsvRecordTest extends TestCase {
     CsvRecord r = sheet.get("2");
     assertEquals(r, r.clone(r.getTable()));
     try {
-      r.getTable().add(r.clone());
+      r.getTable().add((CsvRecord) r.clone());
     } catch (CsvDuplicateKeyException e) {
       e = null;
     }
@@ -295,4 +287,45 @@ public class CsvRecordTest extends TestCase {
     assertFalse(r.equals(new Object()));
   }
 
+  public void testEqualsFailsForDifferentFiles() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet1.csv", UnificationOptions.LOG);
+    CsvTable copy = new CsvTable("src/test/resources/CopyOfSheet1.csv", UnificationOptions.LOG);
+    CsvRecord r1 = sheet.get("2");
+    CsvRecord r2 = copy.get("2");
+    assertFalse(r1.equals(r2));
+  }
+
+  public void testEqualsFailsForDifferentOrderings() {
+    CsvTable sheet = new CsvTable("src/test/resources/sheet1.csv", UnificationOptions.LOG);
+    CsvTable copy = new CsvTable(sheet);
+    sheet.addColumn(new CsvColumn("a1", false));
+    sheet.addColumn(new CsvColumn("a2", false));
+    copy.addColumn(new CsvColumn("a2", false));
+    copy.addColumn(new CsvColumn("a1", false));
+
+    CsvRecord r1 = sheet.get("2");
+    CsvRecord r2 = copy.get("2");
+    assertFalse(r1.equals(r2));
+  }
+
+  public void testGeneratedBridgeMethods() throws Exception {
+
+    for (Method m : CsvRecord.class.getMethods()) {
+      System.out.println(m.toGenericString());
+    }
+
+    CsvTable t = new CsvTable("src/test/resources/sheet2.csv", UnificationOptions.LOG);
+    CsvRecord r = t.get("1");
+    CsvField f = r.get("Id");
+    Object o = r.get((Object) "Id");
+    assertTrue(o.equals(f));
+
+    // Not accessible
+    // Object o2 = r.put("jj", o);
+    Method method = r.getClass().getMethod("put", new Class[] { Object.class, Object.class });
+    method.invoke(r, "Id", o);
+
+    r.remove("Id");
+    // Careful record and table now invalid
+  }
 }
