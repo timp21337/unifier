@@ -82,7 +82,11 @@ public class CsvFileParser {
       throw new NoSuchElementException("Line " + lineNo + ": Position "
           + position + ", line length " + line.length() + " (eof before end of token)");
 
-    if (inUnclosedQuotes || (line.charAt(position) == '"') && ++position > 0) {
+    if (line.charAt(position) == '"') {
+      ++position;
+      inUnclosedQuotes = true;
+    }
+    if (inUnclosedQuotes ) {
 
       // we need to allow for quotes inside quoted fields, so now test for ",
       int closingQuotePosition = line.indexOf("\",", position);
@@ -98,7 +102,7 @@ public class CsvFileParser {
           if (!hasNextRecord())
             throw new IllegalArgumentException("Unclosed quoted field on line "
                 + lineNo);
-          return sofar + "\n" + nextToken(true);
+          return sofar + "\n" + nextToken(inUnclosedQuotes);
         }
       }
 
