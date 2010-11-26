@@ -108,16 +108,11 @@ public class CsvFileParser {
 
       String it = line.substring(position, closingQuotePosition);
 
-      ++closingQuotePosition;
-      position = closingQuotePosition + 1;
-      if (closingQuotePosition < line.length()) {
-        if (line.charAt(closingQuotePosition) != ',') {
-          position = line.length();
-          throw new IllegalArgumentException("No comma after quotes on line "
-              + lineNo);
-        } else if (closingQuotePosition == line.length() - 1)
+      if (closingQuotePosition + 1 < line.length()) { // we found a comma
+        if (closingQuotePosition + 1 == line.length() - 1)
           emptyLastField = true;
       }
+      position = closingQuotePosition + 2;
       return it;
     } else {
       int q = line.indexOf(',', position);
