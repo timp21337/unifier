@@ -27,8 +27,8 @@ scm:cvs:ext:timp@paneris.net:/usr/cvsroot:unifier
     </url>
   </scm>
   <ciManagement>
-    <system>Hudson</system>
-    <url>http://hudson.paneris.net/</url>
+    <system>Jenkins</system>
+    <url>http://jenkins.paneris.net/</url>
   </ciManagement>
 
   <issueManagement>
