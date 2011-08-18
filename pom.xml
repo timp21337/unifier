@@ -4,7 +4,7 @@
 
   <groupId>net.pizey.csv</groupId>
   <artifactId>unifier</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>jar</packaging>
 
   <name>unifier</name>
@@ -27,8 +27,8 @@ scm:cvs:ext:timp@paneris.net:/usr/cvsroot:unifier
     </url>
   </scm>
   <ciManagement>
-    <system>Jenkins</system>
-    <url>http://jenkins.paneris.net/</url>
+    <system>Hudson</system>
+    <url>http://hudson.paneris.net/</url>
   </ciManagement>
 
   <issueManagement>
@@ -138,4 +138,16 @@ https://github.com/timp21337/unifier/issues
       </plugin>
     </plugins>
   </reporting>
+  <distributionManagement>
+    <repository>
+      <id>pizey.net</id>
+      <name>M2 Repository</name>
+      <url>http://pizey.net/maven2/</url>
+    </repository>
+    <site>
+      <id>site</id>
+      <url>file:///var/www/${artifactId}/</url>
+    </site>
+  </distributionManagement>
+
 </project>
