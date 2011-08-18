@@ -1,1 +1,9 @@
-A CSV sheet unifier based upon a model of a CSV file as an ordered map of keys to records and records as an ordered map of field names to values. 
+A CSV sheet unifier based upon a model of a CSV file as an ordered map of keys to records 
+and records as an ordered map of field names to values.
+
+Maven declaration:
+  <dependency>
+   <groupId>net.pizey.csv</groupId>
+    <artifactId>unifier</artifactId>
+    <version>1.0</version>
+  </dependency>     
