@@ -33,6 +33,8 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
   private HashMap<String, CsvRecord> keyToRecord;
   private ArrayList<String> keys;
 
+  private String primaryKeyName;
+
   public CsvTable(String fileName) {
     this(new File(fileName), null);
   }
@@ -60,13 +62,14 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
     this.unificationOption = unificationOption;
     this.nameToColumn = new HashMap<String, CsvColumn>();
     this.columnsInOrder = new ArrayList<CsvColumn>();
+    this.primaryKeyName = primeKeyName;
     this.primaryKeyColumn = null; // Set in load()
     this.keyToRecord = new HashMap<String, CsvRecord>();
     this.keys = new ArrayList<String>();
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(this.dataFile));
-      load(new CsvFileParser(reader), primeKeyName);
+      load(new CsvFileParser(reader));
       reader.close();
     } catch (IOException e) {
       // Naughty me, FileNotFoundException is provocable,
@@ -107,9 +110,9 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
    * @throws CSVWriteDownException
    * @throws NoPrimaryKeyInCSVTableException
    */
-  private void load(CsvFileParser parser, String primeKeyName) throws IOException {
+  private void load(CsvFileParser parser) throws IOException {
 
-    defineColumns(parser, primeKeyName);
+    defineColumns(parser, this.primaryKeyName);
     CsvRecord record;
     while (null != (record = loadRecord(parser))) {
       add(record);
@@ -130,10 +133,10 @@ public class CsvTable implements Map<String, CsvRecord>, Iterable<CsvRecord> {
 
     while (parser.recordHasMoreFields()) {
       String colName = parser.nextField();
-      // First column is always the key
+      // If no primeKeyName specified then first column is key
       if (!colName.equals("")) {
         boolean isPrimeKey = primeKeyName == null ?
-            columnsInOrder.size() == 0 : colName.equals(primeKeyName);
+            columnsInOrder.size() == 0 : colName.equals(this.primaryKeyName);
         CsvColumn column = new CsvColumn(colName, isPrimeKey);
         if (column.isPrimaryKey())
           primaryKeyColumn = column;
