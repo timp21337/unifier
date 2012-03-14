@@ -67,9 +67,10 @@ https://github.com/timp21337/unifier/issues
   </developers>
 
 
-  <properties>
+ <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+ </properties>
 
   <dependencies>
     <dependency>
