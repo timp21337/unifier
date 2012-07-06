@@ -1,5 +1,6 @@
-A CSV sheet unifier based upon a model of a CSV file as an ordered map of keys to records 
-and records as an ordered map of field names to values.
+A CSV sheet unifier based upon a model of a CSV file as 
+an ordered map of keys to records and records as 
+an ordered map of field names to values.
 
 Maven declaration:
   <dependency>
